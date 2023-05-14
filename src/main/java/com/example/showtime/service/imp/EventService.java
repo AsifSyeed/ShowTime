@@ -4,6 +4,8 @@ import com.example.showtime.model.request.EventRequest;
 import com.example.showtime.repository.EventRepository;
 import com.example.showtime.service.IEventService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,11 +17,20 @@ public class EventService implements IEventService {
     private final EventRepository eventRepository;
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void createNewEvent(EventRequest eventRequest) {
-        //check validation first
+    public Event createNewEvent(EventRequest eventRequest) {
+
+        if (isEventNameExists(eventRequest.getEventName())) {
+            throw new IllegalArgumentException("Event name already exists");
+        }
+
         Event event = prepareEventModel(eventRequest);
 
-        eventRepository.save(event);
+        return eventRepository.save(event);
+    }
+
+    @Override
+    public boolean isEventNameExists(String eventName) {
+        return eventRepository.existsByEventName(eventName);
     }
 
     private Event prepareEventModel(EventRequest eventRequest) {
