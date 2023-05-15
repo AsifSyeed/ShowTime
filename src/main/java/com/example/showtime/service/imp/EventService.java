@@ -1,4 +1,5 @@
 package com.example.showtime.service.imp;
+
 import com.example.showtime.model.entity.Event;
 import com.example.showtime.model.request.EventRequest;
 import com.example.showtime.model.response.EventResponse;
@@ -7,19 +8,19 @@ import com.example.showtime.service.IEventService;
 import com.sun.jdi.request.InvalidRequestStateException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
 public class EventService implements IEventService {
 
     private final EventRepository eventRepository;
+
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public EventResponse createNewEvent(EventRequest eventRequest) {
@@ -52,7 +53,7 @@ public class EventService implements IEventService {
         event.setEventStartDate(eventRequest.getEventStartDate());
         event.setEventEndDate(eventRequest.getEventEndDate());
         event.setEventCapacity(eventRequest.getEventCapacity());
-        event.setEventQrCode(eventRequest.getEventQrCode());
+        event.setEventQrCode(generateRandomString(eventRequest.getEventName()));
 
         return event;
     }
@@ -66,5 +67,30 @@ public class EventService implements IEventService {
 
             throw new InvalidRequestStateException("Request body is not valid");
         }
+    }
+
+    private String generateRandomString(String eventName) {
+        StringBuilder randomString = new StringBuilder();
+
+        // Split the event name by whitespace to get individual words
+        String[] words = eventName.split("\\s+");
+
+        // Iterate over each word and append its capitalized first letter to the random string
+        for (String word : words) {
+            if (!word.isEmpty()) {
+                randomString.append(Character.toUpperCase(word.charAt(0)));
+            }
+        }
+
+        // Calculate the number of remaining characters needed
+        int remainingCharacters = 8 - randomString.length();
+
+        // Generate random numbers to fill up the remaining characters
+        Random random = new Random();
+        for (int i = 0; i < remainingCharacters; i++) {
+            randomString.append(random.nextInt(10));
+        }
+
+        return randomString.toString();
     }
 }
