@@ -67,6 +67,10 @@ public class EventService implements IEventService {
 
             throw new InvalidRequestStateException("Request body is not valid");
         }
+
+        if (eventRequest.getEventEndDate().before(eventRequest.getEventStartDate())) {
+            throw new IllegalArgumentException("Event end date cannot be greater than event start date");
+        }
     }
 
     private String generateRandomString(String eventName) {
