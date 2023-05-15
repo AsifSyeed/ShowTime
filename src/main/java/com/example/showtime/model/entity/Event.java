@@ -30,4 +30,7 @@ public class Event {
 
     @Column(name = "EVENT_QR_CODE", columnDefinition = "TEXT")
     private String eventQrCode;
+
+    @Column(name = "EVENT_ACTIVE_STATUS")
+    private  Boolean isActive;
 }

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.Objects;
 import java.util.Random;
 
@@ -54,8 +55,14 @@ public class EventService implements IEventService {
         event.setEventEndDate(eventRequest.getEventEndDate());
         event.setEventCapacity(eventRequest.getEventCapacity());
         event.setEventQrCode(generateRandomString(eventRequest.getEventName()));
+        event.setIsActive(getEventStatus(eventRequest.getEventEndDate()));
 
         return event;
+    }
+
+    private Boolean getEventStatus(Date eventEndDate) {
+        Date currentDate = new Date();
+        return eventEndDate.after(currentDate);
     }
 
     private void validateRequest(EventRequest eventRequest) {
