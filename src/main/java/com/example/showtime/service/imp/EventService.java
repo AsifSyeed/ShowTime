@@ -12,9 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +39,25 @@ public class EventService implements IEventService {
                 .eventCapacity(event.getEventCapacity())
                 .eventQrCode(event.getEventQrCode())
                 .build();
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public List<EventResponse> getAllEvents() {
+        List<Event> events = eventRepository.findAll();
+        List<EventResponse> eventResponses = new ArrayList<>();
+
+        for (Event event : events) {
+            EventResponse eventResponse = EventResponse.builder()
+                    .eventName(event.getEventName())
+                    .eventCapacity(event.getEventCapacity())
+                    .eventQrCode(event.getEventQrCode())
+                    .build();
+
+            eventResponses.add(eventResponse);
+        }
+
+        return eventResponses;
     }
 
     private boolean isEventNameExists(String eventName) {

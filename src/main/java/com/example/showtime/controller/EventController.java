@@ -1,5 +1,5 @@
 package com.example.showtime.controller;
-import com.example.showtime.model.entity.Event;
+
 import com.example.showtime.model.request.EventRequest;
 import com.example.showtime.model.response.ApiResponse;
 import com.example.showtime.model.response.EventResponse;
@@ -7,14 +7,11 @@ import com.example.showtime.service.IEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Collections;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,14 +19,29 @@ import java.util.Collections;
 public class EventController {
 
     private final IEventService iEventService;
+
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<EventResponse>> createEvent(@RequestBody @Valid EventRequest eventRequest) {
 
         EventResponse eventResponse = iEventService.createNewEvent(eventRequest);
 
-        // Create a success response with a response code, message, and event response data
-        ApiResponse<EventResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Event created successfully", Collections.singletonList(eventResponse));
+        ApiResponse<EventResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Event created successfully", eventResponse);
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<EventResponse>>> getAllEvents() {
+        List<EventResponse> eventResponses = iEventService.getAllEvents();
+
+        if (eventResponses.isEmpty()) {
+            ApiResponse<List<EventResponse>> notFoundResponse = new ApiResponse<>(HttpStatus.NOT_FOUND.value(), "No events found", null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(notFoundResponse);
+        }
+
+        ApiResponse<List<EventResponse>> successResponse = new ApiResponse<>(HttpStatus.OK.value(), "Events retrieved successfully", eventResponses);
+        return ResponseEntity.ok(successResponse);
+    }
+
+
 }
