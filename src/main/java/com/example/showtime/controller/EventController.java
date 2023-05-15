@@ -23,20 +23,9 @@ public class EventController {
 
     private final IEventService iEventService;
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<EventResponse>> createEvent(@RequestBody @Valid EventRequest eventRequest, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse<EventResponse>> createEvent(@RequestBody @Valid EventRequest eventRequest) {
 
-        if (bindingResult.hasErrors()) {
-            // If there are validation errors, return a Bad Request response with the error details
-            return ResponseEntity.badRequest().build();
-        }
-
-        Event event = iEventService.createNewEvent(eventRequest);
-
-        EventResponse eventResponse = new EventResponse(
-                event.getEventName(),
-                event.getEventCapacity(),
-                event.getEventQrCode()
-        );
+        EventResponse eventResponse = iEventService.createNewEvent(eventRequest);
 
         // Create a success response with a response code, message, and event response data
         ApiResponse<EventResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Event created successfully", Collections.singletonList(eventResponse));

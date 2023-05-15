@@ -1,9 +1,8 @@
 package com.example.showtime.service;
 
-import com.example.showtime.model.entity.Event;
 import com.example.showtime.model.request.EventRequest;
+import com.example.showtime.model.response.EventResponse;
 
 public interface IEventService {
-    Event createNewEvent(EventRequest eventRequest);
-    boolean isEventNameExists(String eventName);
+    EventResponse createNewEvent(EventRequest eventRequest);
 }
