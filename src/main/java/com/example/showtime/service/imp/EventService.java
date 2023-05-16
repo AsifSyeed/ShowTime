@@ -26,10 +26,6 @@ public class EventService implements IEventService {
 
         validateRequest(eventRequest);
 
-        if (isEventNameExists(eventRequest.getEventName())) {
-            throw new IllegalArgumentException("Event name already exists");
-        }
-
         Event event = prepareEventModel(eventRequest);
 
         eventRepository.save(event);
@@ -83,6 +79,10 @@ public class EventService implements IEventService {
                 Objects.isNull(eventRequest.getEventCapacity())) {
 
             throw new InvalidRequestStateException("Request body is not valid");
+        }
+
+        if (isEventNameExists(eventRequest.getEventName())) {
+            throw new IllegalArgumentException("Event name already exists");
         }
 
         if (eventRequest.getEventEndDate().before(eventRequest.getEventStartDate())) {
