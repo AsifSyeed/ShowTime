@@ -44,20 +44,13 @@ public class EventService implements IEventService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public List<EventResponse> getAllEvents() {
-        List<Event> events = eventRepository.findAll();
-        List<EventResponse> eventResponses = new ArrayList<>();
-
-        for (Event event : events) {
-            EventResponse eventResponse = EventResponse.builder()
-                    .eventName(event.getEventName())
-                    .eventCapacity(event.getEventCapacity())
-                    .eventQrCode(event.getEventQrCode())
-                    .build();
-
-            eventResponses.add(eventResponse);
-        }
-
-        return eventResponses;
+        return eventRepository.findAll().stream()
+                .map(event -> EventResponse.builder()
+                        .eventName(event.getEventName())
+                        .eventCapacity(event.getEventCapacity())
+                        .eventQrCode(event.getEventQrCode())
+                        .build())
+                .toList();
     }
 
     private boolean isEventNameExists(String eventName) {

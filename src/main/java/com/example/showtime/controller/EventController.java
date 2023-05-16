@@ -8,9 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import javax.validation.Valid;
-import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -40,8 +38,7 @@ public class EventController {
         }
 
         ApiResponse<List<EventResponse>> successResponse = new ApiResponse<>(HttpStatus.OK.value(), "Events retrieved successfully", eventResponses);
+
         return ResponseEntity.ok(successResponse);
     }
-
-
 }
