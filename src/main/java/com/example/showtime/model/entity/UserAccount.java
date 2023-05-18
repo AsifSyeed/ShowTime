@@ -1,6 +1,5 @@
 package com.example.showtime.model.entity;
 
-import com.example.showtime.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,16 +8,13 @@ import java.util.Date;
 
 @Getter
 @Setter
-@Entity(name = "USERS")
-public class User {
+@Entity(name = "USER_ACCOUNT")
+public class UserAccount {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_sequence")
     @SequenceGenerator(name = "user_sequence", sequenceName = "user_sequence", allocationSize = 1)
     private long id;
-
-    @Column(name = "USER_ID")
-    private String userId;
 
     @Column(name = "USER_NAME")
     private String userName;
@@ -34,4 +30,7 @@ public class User {
 
     @Column(name = "USER_CREATION_DATE")
     private Date userCreationDate;
+
+    @Column(name = "PASSWORD")
+    private String password;
 }

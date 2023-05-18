@@ -1,5 +1,6 @@
 package com.example.showtime.model.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +9,8 @@ import lombok.Setter;
 public class ApiResponse<T> {
     private int responseCode;
     private String message;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private T data;
 
     public ApiResponse(int responseCode, String message, T data) {

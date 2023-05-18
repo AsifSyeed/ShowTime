@@ -23,11 +23,11 @@ public class UserController {
     private final IUserService iUserService;
 
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<SignUpResponse>> signUpUser(@RequestBody @Valid SignUpRequest signUpRequest) {
+    public ResponseEntity<ApiResponse<?>> signUpUser(@RequestBody @Valid SignUpRequest signUpRequest) {
 
-        SignUpResponse signUpResponse = iUserService.signUpUser(signUpRequest);
+        iUserService.signUpUser(signUpRequest);
 
-        ApiResponse<SignUpResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "User signed up successfully", signUpResponse);
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "User signed up successfully", null);
 
         return ResponseEntity.ok(response);
     }
