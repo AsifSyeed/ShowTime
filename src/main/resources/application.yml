@@ -17,3 +17,7 @@ server:
   error:
     include-message: always
     include-stacktrace: always
+
+jwt:
+  secret: showtime
+  exp: 50000
