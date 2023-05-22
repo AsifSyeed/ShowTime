@@ -19,5 +19,5 @@ server:
     include-stacktrace: always
 
 jwt:
-  secret: showtime
+  secret: ToolFearInoculumLateralus10000DaysAenemaUndertowAdamJonesMaynardJamesKeananJustinChancellorDaneyCarrey
   exp: 50000

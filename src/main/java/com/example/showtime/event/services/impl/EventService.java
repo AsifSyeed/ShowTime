@@ -1,5 +1,6 @@
 package com.example.showtime.event.services.impl;
 
+import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.model.request.EventRequest;
 import com.example.showtime.event.model.response.EventResponse;
@@ -8,6 +9,7 @@ import com.example.showtime.event.services.IEventService;
 import com.sun.jdi.request.InvalidRequestStateException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -39,7 +41,7 @@ public class EventService implements IEventService {
                     .eventQrCode(event.getEventQrCode())
                     .build();
         } catch (AccessDeniedException e) {
-            throw new IllegalArgumentException("Unauthorized", e);
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
         }
     }
 
@@ -84,15 +86,15 @@ public class EventService implements IEventService {
                 Objects.isNull(eventRequest.getEventEndDate()) ||
                 Objects.isNull(eventRequest.getEventCapacity())) {
 
-            throw new InvalidRequestStateException("Request body is not valid");
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Request body is not valid");
         }
 
         if (isEventNameExists(eventRequest.getEventName())) {
-            throw new IllegalArgumentException("Event name already exists");
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event name already exists");
         }
 
         if (eventRequest.getEventEndDate().before(eventRequest.getEventStartDate())) {
-            throw new IllegalArgumentException("Event end date cannot be greater than event start date");
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event end date cannot be greater than event start date");
         }
     }
 
@@ -110,7 +112,7 @@ public class EventService implements IEventService {
         }
 
         // Calculate the number of remaining characters needed
-        int remainingCharacters = 8 - randomString.length();
+        int remainingCharacters = 10 - randomString.length();
 
         // Generate random numbers to fill up the remaining characters
         Random random = new Random();

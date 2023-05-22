@@ -1,5 +1,6 @@
 package com.example.showtime.user.service.imp;
 
+import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.user.enums.UserRole;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.model.request.SignUpRequest;
@@ -8,6 +9,7 @@ import com.example.showtime.user.service.IUserService;
 import com.sun.jdi.request.InvalidRequestStateException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,19 +42,19 @@ public class UserService implements IUserService {
                 StringUtils.isEmpty(signUpRequest.getUserName()) ||
                 !isValidUserRole(signUpRequest.getUserRole())) {
 
-            throw new InvalidRequestStateException("Request body is not valid");
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Request body is not valid");
         }
 
         if (isEmailExists(signUpRequest.getEmail())) {
-            throw new IllegalArgumentException("Email ID already used");
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Email ID already used");
         }
 
         if (isUserNameExists(signUpRequest.getUserName())) {
-            throw new IllegalArgumentException("Username already used");
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Username already used");
         }
 
         if (isPhoneNumberExists(signUpRequest.getPhoneNumber())) {
-            throw new IllegalArgumentException("Phone Number already used");
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Phone Number already used");
         }
     }
 
