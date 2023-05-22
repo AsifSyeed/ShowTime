@@ -1,6 +1,8 @@
 package com.example.showtime.event.model.entity;
 
 import javax.persistence.*;
+
+import com.example.showtime.user.model.entity.UserAccount;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,8 +14,7 @@ import java.util.Date;
 public class Event {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "event_sequence")
-    @SequenceGenerator(name = "event_sequence", sequenceName = "event_sequence", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "EVENT_NAME")
@@ -33,4 +34,8 @@ public class Event {
 
     @Column(name = "EVENT_ACTIVE_STATUS")
     private  Boolean isActive;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CREATED_BY", referencedColumnName = "EMAIL")
+    private UserAccount createdBy;
 }

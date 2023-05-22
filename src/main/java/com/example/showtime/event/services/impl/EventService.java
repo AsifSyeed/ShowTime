@@ -6,16 +6,23 @@ import com.example.showtime.event.model.request.EventRequest;
 import com.example.showtime.event.model.response.EventResponse;
 import com.example.showtime.event.repository.EventRepository;
 import com.example.showtime.event.services.IEventService;
-import com.sun.jdi.request.InvalidRequestStateException;
+import com.example.showtime.ticket.service.ITicketService;
+import com.example.showtime.user.model.entity.UserAccount;
+import com.example.showtime.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +30,8 @@ import java.util.stream.Collectors;
 public class EventService implements IEventService {
 
     private final EventRepository eventRepository;
+    private final UserRepository userRepository;
+    private final ITicketService ticketService;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -35,6 +44,8 @@ public class EventService implements IEventService {
 
             eventRepository.save(event);
 
+            createTicketsForEvent(event);
+
             return EventResponse.builder()
                     .eventName(event.getEventName())
                     .eventCapacity(event.getEventCapacity())
@@ -42,6 +53,14 @@ public class EventService implements IEventService {
                     .build();
         } catch (AccessDeniedException e) {
             throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
+        }
+    }
+
+    private void createTicketsForEvent(Event event) {
+        int capacity = Math.toIntExact(event.getEventCapacity());
+
+        for (int i = 0; i < capacity; i++) {
+            ticketService.createTicket(event, i);
         }
     }
 
@@ -64,12 +83,19 @@ public class EventService implements IEventService {
     private Event prepareEventModel(EventRequest eventRequest) {
         Event event = new Event();
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String createdByUserEmail = authentication.getName();
+
+        UserAccount createdBy = userRepository.findByEmail(createdByUserEmail)
+                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+
         event.setEventName(eventRequest.getEventName());
         event.setEventStartDate(eventRequest.getEventStartDate());
         event.setEventEndDate(eventRequest.getEventEndDate());
         event.setEventCapacity(eventRequest.getEventCapacity());
         event.setEventQrCode(generateRandomString(eventRequest.getEventName()));
         event.setIsActive(getEventStatus(eventRequest.getEventEndDate()));
+        event.setCreatedBy(createdBy);
 
         return event;
     }

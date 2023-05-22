@@ -20,4 +20,4 @@ server:
 
 jwt:
   secret: ToolFearInoculumLateralus10000DaysAenemaUndertowAdamJonesMaynardJamesKeananJustinChancellorDaneyCarrey
-  exp: 50000
+  exp: 100000
