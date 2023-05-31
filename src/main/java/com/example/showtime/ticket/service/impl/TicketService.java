@@ -42,8 +42,6 @@ public class TicketService implements ITicketService {
 
             List<Ticket> newTickets = prepareTicketModel(buyTicketRequest);
 
-            ticketRepository.saveAll(newTickets);
-
             return newTickets.stream()
                     .map(ticket -> BuyTicketResponse.builder()
                             .ticketId(ticket.getTicketQrCode())
@@ -77,6 +75,7 @@ public class TicketService implements ITicketService {
             ticket.setEventId(selectedEvent.getEventId());
             ticket.setValidityDate(selectedEvent.getEventEndDate());
             ticket.setTicketOwner(createdBy.getEmail());
+            ticketRepository.save(ticket);
             eventService.updateAvailableTickets(selectedEvent.getEventId());
 
             newTickets.add(ticket);
