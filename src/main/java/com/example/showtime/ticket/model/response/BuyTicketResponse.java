@@ -13,4 +13,5 @@ import lombok.Setter;
 public class BuyTicketResponse {
     private String ticketId;
     private String eventId;
+    private String userName;
 }

@@ -46,6 +46,7 @@ public class TicketService implements ITicketService {
                     .map(ticket -> BuyTicketResponse.builder()
                             .ticketId(ticket.getTicketQrCode())
                             .eventId(ticket.getEventId())
+                            .userName(ticket.getTicketOwner())
                             .build())
                     .collect(Collectors.toList());
 
