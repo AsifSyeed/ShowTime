@@ -2,30 +2,106 @@ package com.example.showtime.ticket.service.impl;
 
 import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.event.model.entity.Event;
+import com.example.showtime.event.model.response.EventResponse;
+import com.example.showtime.event.services.IEventService;
 import com.example.showtime.ticket.model.entity.Ticket;
+import com.example.showtime.ticket.model.request.BuyTicketRequest;
+import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import com.example.showtime.ticket.repository.TicketRepository;
 import com.example.showtime.ticket.service.ITicketService;
+import com.example.showtime.user.model.entity.UserAccount;
+import com.example.showtime.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class TicketService implements ITicketService {
 
     private final TicketRepository ticketRepository;
+    private final UserRepository userRepository;
+    private final IEventService eventService;
 
     @Override
-    public void createTicket(Event event, int ticketNo) {
-        Ticket ticket = new Ticket();
-        ticket.setTicketQrCode(generateQRCode(event, ticketNo));
-        ticket.setValidityDate(event.getEventEndDate());
-        ticket.setUsed(false);
-        ticket.setEvent(event);
-        ticket.setEventQrCode(event.getEventQrCode());
-        ticketRepository.save(ticket);
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public List<BuyTicketResponse> createTicket(BuyTicketRequest buyTicketRequest) {
+        try {
+            validateRequest(buyTicketRequest);
+
+            List<Ticket> newTickets = prepareTicketModel(buyTicketRequest);
+
+            ticketRepository.saveAll(newTickets);
+
+            return newTickets.stream()
+                    .map(ticket -> BuyTicketResponse.builder()
+                            .ticketId(ticket.getTicketQrCode())
+                            .eventId(ticket.getEventId())
+                            .build())
+                    .collect(Collectors.toList());
+
+        } catch (AccessDeniedException e) {
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
+        }
+    }
+
+    private List<Ticket> prepareTicketModel(BuyTicketRequest buyTicketRequest) {
+
+        List<Ticket> newTickets = new ArrayList<>(Math.toIntExact(buyTicketRequest.getNumberOfTicket()));
+
+        for (int i = 0; i < buyTicketRequest.getNumberOfTicket(); i++) {
+            Ticket ticket = new Ticket();
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String createdByUserEmail = authentication.getName();
+
+            UserAccount createdBy = userRepository.findByEmail(createdByUserEmail)
+                    .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+
+            Event selectedEvent = eventService.getEventById(buyTicketRequest.getEventId());
+
+            ticket.setTicketQrCode(generateQRCode(selectedEvent));
+            ticket.setUsed(false);
+            ticket.setActive(true);
+            ticket.setEventId(selectedEvent.getEventId());
+            ticket.setValidityDate(selectedEvent.getEventEndDate());
+            ticket.setTicketOwner(createdBy.getEmail());
+            eventService.updateAvailableTickets(selectedEvent.getEventId());
+
+            newTickets.add(ticket);
+        }
+
+        return newTickets;
+    }
+
+    private void validateRequest(BuyTicketRequest buyTicketRequest) {
+        if (Objects.isNull(buyTicketRequest) ||
+                StringUtils.isEmpty(buyTicketRequest.getEventId()) ||
+                Objects.isNull(buyTicketRequest.getNumberOfTicket())) {
+
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Request body is not valid");
+        }
+
+        Event selectedEvent = eventService.getEventById(buyTicketRequest.getEventId());
+
+        if (selectedEvent == null) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event not found");
+        }
+
+        if (selectedEvent.getEventCapacity() - buyTicketRequest.getNumberOfTicket() < 0) {
+            throw new BaseException(HttpStatus.NOT_ACCEPTABLE.value(), "Tickets are out of stock");
+        }
     }
 
     @Override
@@ -47,12 +123,14 @@ public class TicketService implements ITicketService {
     }
 
     @Override
-    public List<Ticket> getTicketsByEvent(Event event) {
-        return ticketRepository.findByEventQrCode(event.getEventQrCode());
+    public List<Ticket> getTicketsByEventId(String eventId) {
+        return ticketRepository.findByEventId(eventId);
     }
 
-    private String generateQRCode(Event event, int ticketNo) {
+    private String generateQRCode(Event event) {
 
-        return event.getEventQrCode() + event.getId() + ticketNo; // Placeholder for the actual generation code
+        List<Ticket> ticketsFromEvent = getTicketsByEventId(event.getEventId());
+
+        return event.getEventId() + event.getId() + (ticketsFromEvent.size() + 1); // Placeholder for the actual generation code
     }
 }

@@ -1,4 +1,5 @@
-package com.example.showtime.event.model.response;
+package com.example.showtime.ticket.model.response;
+
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +10,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @Builder
-public class EventResponse {
-    private String eventName;
-    private long eventCapacity;
+public class BuyTicketResponse {
+    private String ticketId;
     private String eventId;
 }

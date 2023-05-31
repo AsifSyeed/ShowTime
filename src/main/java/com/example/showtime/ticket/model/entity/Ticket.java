@@ -17,10 +17,6 @@ public class Ticket {
     @Column(name = "ID")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "EVENT")
-    private Event event;
-
     @Column(name = "TICKET_QR_CODE", unique = true)
     private String ticketQrCode;
 
@@ -30,6 +26,12 @@ public class Ticket {
     @Column(name = "USED")
     private boolean used;
 
-    @Column(name = "EVENT_QRCODE")
-    private String eventQrCode;
+    @Column(name = "IS_ACTIVE")
+    private boolean isActive;
+
+    @Column(name = "EVENT_ID")
+    private String eventId;
+
+    @Column(name = "TICKET_OWNER")
+    private String ticketOwner;
  }

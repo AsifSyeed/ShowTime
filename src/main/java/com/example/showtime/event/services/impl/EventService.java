@@ -6,7 +6,6 @@ import com.example.showtime.event.model.request.EventRequest;
 import com.example.showtime.event.model.response.EventResponse;
 import com.example.showtime.event.repository.EventRepository;
 import com.example.showtime.event.services.IEventService;
-import com.example.showtime.ticket.service.ITicketService;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +30,6 @@ public class EventService implements IEventService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
-    private final ITicketService ticketService;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -44,23 +42,13 @@ public class EventService implements IEventService {
 
             eventRepository.save(event);
 
-            createTicketsForEvent(event);
-
             return EventResponse.builder()
                     .eventName(event.getEventName())
                     .eventCapacity(event.getEventCapacity())
-                    .eventQrCode(event.getEventQrCode())
+                    .eventId(event.getEventId())
                     .build();
         } catch (AccessDeniedException e) {
             throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
-        }
-    }
-
-    private void createTicketsForEvent(Event event) {
-        int capacity = Math.toIntExact(event.getEventCapacity());
-
-        for (int i = 0; i < capacity; i++) {
-            ticketService.createTicket(event, i);
         }
     }
 
@@ -71,13 +59,29 @@ public class EventService implements IEventService {
                 .map(event -> EventResponse.builder()
                         .eventName(event.getEventName())
                         .eventCapacity(event.getEventCapacity())
-                        .eventQrCode(event.getEventQrCode())
+                        .eventId(event.getEventId())
                         .build())
                 .collect(Collectors.toList());
     }
 
     private boolean isEventNameExists(String eventName) {
         return eventRepository.existsByEventName(eventName);
+    }
+
+    public boolean isEventIdExists(String eventId) {
+        return eventRepository.existsByEventId(eventId);
+    }
+
+    @Override
+    public Event getEventById(String eventId) {
+        return eventRepository.findByEventId(eventId);
+    }
+
+    @Override
+    public void updateAvailableTickets(String eventId) {
+        Event event = getEventById(eventId);
+        event.setEventCapacity(event.getEventCapacity() - 1);
+        eventRepository.save(event);
     }
 
     private Event prepareEventModel(EventRequest eventRequest) {
@@ -93,9 +97,9 @@ public class EventService implements IEventService {
         event.setEventStartDate(eventRequest.getEventStartDate());
         event.setEventEndDate(eventRequest.getEventEndDate());
         event.setEventCapacity(eventRequest.getEventCapacity());
-        event.setEventQrCode(generateRandomString(eventRequest.getEventName()));
+        event.setEventId(generateRandomString(eventRequest.getEventName()));
         event.setIsActive(getEventStatus(eventRequest.getEventEndDate()));
-        event.setCreatedBy(createdBy);
+        event.setCreatedBy(createdBy.getEmail());
 
         return event;
     }

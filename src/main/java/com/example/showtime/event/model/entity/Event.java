@@ -29,13 +29,12 @@ public class Event {
     @Column(name = "EVENT_END_DATE")
     private Date eventEndDate;
 
-    @Column(name = "EVENT_QR_CODE", columnDefinition = "TEXT")
-    private String eventQrCode;
+    @Column(name = "EVENT_ID", columnDefinition = "TEXT", unique = true)
+    private String eventId;
 
     @Column(name = "EVENT_ACTIVE_STATUS")
     private  Boolean isActive;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CREATED_BY", referencedColumnName = "EMAIL")
-    private UserAccount createdBy;
+    @Column(name = "CREATED_BY")
+    private String createdBy;
 }
