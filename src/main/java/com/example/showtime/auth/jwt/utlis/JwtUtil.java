@@ -50,19 +50,24 @@ public class JwtUtil implements Serializable {
         return expiration.before(new Date());
     }
 
+    public String getUserRoleFromToken(String token) {
+        return getClaimFromToken(token, claims -> claims.get("role", String.class));
+    }
+
     //generate token for user
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(UserDetails userDetails, int userRole) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("role", userRole);
         return doGenerateToken(claims, userDetails.getUsername());
     }
 
-    //while creating the token -
-    //1. Define  claims of the token, like Issuer, Expiration, Subject, and the ID
-    //2. Sign the JWT using the HS512 algorithm and secret key.
-    //3. According to JWS Compact Serialization(https://tools.ietf.org/html/draft-ietf-jose-json-web-signature-41#section-3.1)
-    //   compaction of the JWT to a URL-safe string
+    // while creating the token -
+    // 1. Define claims of the token, like Issuer, Expiration, Subject, and the ID
+    // 2. Include additional claims such as user role
+    // 3. Sign the JWT using the HS512 algorithm and secret key
+    // 4. According to JWS Compact Serialization(https://tools.ietf.org/html/draft-ietf-jose-json-web-signature-41#section-3.1),
+    //    compact the JWT to a URL-safe string
     private String doGenerateToken(Map<String, Object> claims, String subject) {
-
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)

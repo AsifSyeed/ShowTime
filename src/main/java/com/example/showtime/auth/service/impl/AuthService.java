@@ -4,12 +4,14 @@ import com.example.showtime.auth.jwt.utlis.JwtUtil;
 import com.example.showtime.auth.model.request.AuthRequest;
 import com.example.showtime.auth.model.response.AuthResponse;
 import com.example.showtime.auth.service.IAuthService;
+import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.repository.UserRepository;
 import com.example.showtime.user.service.imp.UserDetailsServiceImplementation;
 import com.sun.jdi.request.InvalidRequestStateException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -43,7 +45,7 @@ public class AuthService implements IAuthService {
             );
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getEmail());
-            String token = jwtUtil.generateToken(userDetails);
+            String token = jwtUtil.generateToken(userDetails, authRequest.getUserRole());
 
             return AuthResponse.builder()
                     .token(token)
@@ -59,13 +61,17 @@ public class AuthService implements IAuthService {
                 StringUtils.isEmpty(authRequest.getEmail()) ||
                 StringUtils.isEmpty(authRequest.getPassword())) {
 
-            throw new InvalidRequestStateException("Request body is not valid");
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Request body is not valid");
         }
 
-        Optional<UserAccount> userAccount = userRepository.findByEmail(authRequest.getEmail());
+        Optional<UserAccount> userAccountOptional = userRepository.findByEmail(authRequest.getEmail());
 
-        if (userAccount.isEmpty()) {
-            throw new IllegalArgumentException("User not found");
+        if (userAccountOptional.isEmpty()) {
+            throw new BaseException(HttpStatus.NOT_FOUND.value(), "User not found");
+        }
+
+        if (authRequest.getUserRole() != userAccountOptional.get().getRole()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "User role is not valid");
         }
     }
 }

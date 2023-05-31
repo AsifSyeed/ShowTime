@@ -1,11 +1,13 @@
 package com.example.showtime.event.services.impl;
 
+import com.example.showtime.auth.jwt.utlis.JwtUtil;
 import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.model.request.EventRequest;
 import com.example.showtime.event.model.response.EventResponse;
 import com.example.showtime.event.repository.EventRepository;
 import com.example.showtime.event.services.IEventService;
+import com.example.showtime.user.enums.UserRole;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Date;
 import java.util.List;
@@ -125,6 +128,16 @@ public class EventService implements IEventService {
 
         if (eventRequest.getEventEndDate().before(eventRequest.getEventStartDate())) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event end date cannot be greater than event start date");
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .orElse(null);
+
+        if (userRole == null || Integer.parseInt(userRole) != UserRole.ORGANIZER.getValue()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "You are not authorized to create an event");
         }
     }
 
