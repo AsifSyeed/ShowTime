@@ -1,6 +1,5 @@
 package com.example.showtime.event.services.impl;
 
-import com.example.showtime.auth.jwt.utlis.JwtUtil;
 import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.model.request.EventRequest;
@@ -49,6 +48,8 @@ public class EventService implements IEventService {
                     .eventName(event.getEventName())
                     .eventCapacity(event.getEventCapacity())
                     .eventId(event.getEventId())
+                    .eventStartDate(String.valueOf(event.getEventStartDate()))
+                    .eventEndDate(String.valueOf(event.getEventEndDate()))
                     .build();
         } catch (AccessDeniedException e) {
             throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
@@ -63,6 +64,8 @@ public class EventService implements IEventService {
                         .eventName(event.getEventName())
                         .eventCapacity(event.getEventCapacity())
                         .eventId(event.getEventId())
+                        .eventStartDate(String.valueOf(event.getEventStartDate()))
+                        .eventEndDate(String.valueOf(event.getEventEndDate()))
                         .build())
                 .collect(Collectors.toList());
     }

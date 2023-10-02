@@ -13,4 +13,6 @@ public class EventResponse {
     private String eventName;
     private long eventCapacity;
     private String eventId;
+    private  String eventStartDate;
+    private  String eventEndDate;
 }
