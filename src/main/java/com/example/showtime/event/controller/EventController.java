@@ -33,10 +33,10 @@ public class EventController {
     public ResponseEntity<ApiResponse<List<EventResponse>>> getAllEvents() {
         List<EventResponse> eventResponses = iEventService.getAllEvents();
 
-        if (eventResponses.isEmpty()) {
-            ApiResponse<List<EventResponse>> notFoundResponse = new ApiResponse<>(HttpStatus.NOT_FOUND.value(), "No events found", null);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(notFoundResponse);
-        }
+//        if (eventResponses.isEmpty()) {
+//            ApiResponse<List<EventResponse>> notFoundResponse = new ApiResponse<>(HttpStatus.NOT_FOUND.value(), "No events found", null);
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(notFoundResponse);
+//        }
 
         ApiResponse<List<EventResponse>> successResponse = new ApiResponse<>(HttpStatus.OK.value(), "Events retrieved successfully", eventResponses);
 

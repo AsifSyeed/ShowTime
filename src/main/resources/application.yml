@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/ShowTime
     username: postgres
-    password: 4421
+    password: 012358
 
   jpa:
     hibernate:
