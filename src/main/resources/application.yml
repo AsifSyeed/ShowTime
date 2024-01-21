@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/ShowTime
+    url: jdbc:postgresql://showtimedb.c12siig6uo0v.us-east-1.rds.amazonaws.com:5432/showTime
     username: postgres
-    password: 012358
+    password: Tool4421
 
   jpa:
     hibernate:

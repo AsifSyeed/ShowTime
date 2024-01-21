@@ -116,6 +116,16 @@ public class EventService implements IEventService {
     }
 
     private void validateRequest(EventRequest eventRequest) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .orElse(null);
+
+        if (userRole == null || Integer.parseInt(userRole) != UserRole.ADMIN.getValue()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "You are not authorized to create an event");
+        }
+
         if (Objects.isNull(eventRequest) ||
                 StringUtils.isEmpty(eventRequest.getEventName()) ||
                 Objects.isNull(eventRequest.getEventStartDate()) ||
@@ -131,16 +141,6 @@ public class EventService implements IEventService {
 
         if (eventRequest.getEventEndDate().before(eventRequest.getEventStartDate())) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event end date cannot be greater than event start date");
-        }
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userRole = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .findFirst()
-                .orElse(null);
-
-        if (userRole == null || Integer.parseInt(userRole) != UserRole.ORGANIZER.getValue()) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "You are not authorized to create an event");
         }
     }
 
