@@ -19,7 +19,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -32,6 +31,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     private final UserDetailsService userDetailsService;
+    private final UserDetailsService adminDetailsService;
 
     private final JwtFilter jwtFilter;
 
@@ -48,9 +48,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     );
 
     @Autowired
-    public WebSecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, UserDetailsService userDetailsService, JwtFilter jwtFilter) {
+    public WebSecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, @Qualifier("userDetailsServiceImplementation") UserDetailsService userDetailsService,
+                             @Qualifier("adminDetailsServiceImplementation") UserDetailsService adminDetailsService, JwtFilter jwtFilter) {
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.userDetailsService = userDetailsService;
+        this.adminDetailsService = adminDetailsService;
         this.jwtFilter = jwtFilter;
     }
 

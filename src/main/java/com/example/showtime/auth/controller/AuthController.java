@@ -29,4 +29,15 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/admin/token")
+    public ResponseEntity<ApiResponse<AuthResponse>> adminLogin(@RequestBody @Valid AuthRequest authRequest) {
+
+        AuthResponse authResponse = authService.adminLogin(authRequest);
+
+        ApiResponse<AuthResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Admin logged in successfully!", authResponse);
+
+        return ResponseEntity.ok(response);
+    }
+
 }

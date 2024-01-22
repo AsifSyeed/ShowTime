@@ -6,7 +6,6 @@ import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.model.request.SignUpRequest;
 import com.example.showtime.user.repository.UserRepository;
 import com.example.showtime.user.service.IUserService;
-import com.sun.jdi.request.InvalidRequestStateException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;

@@ -24,11 +24,11 @@ public class SwaggerConfig {
 
     private ApiInfo getInfo() {
         return new ApiInfo(
-                "Showtime API",
-                "Showtime API Documentation",
+                "Counters BD API",
+                "Counters BD API Documentation",
                 "1.0",
                 "Terms of service",
-                new Contact("Showtime", "www.showtime.com", "asifsyeed666@gmail.com")
+                new Contact("Counters BD", "www.countersbd.com", "help@countersbd.com")
                 , "License of API", "API license URL", java.util.Collections.emptyList()
         );
     }
