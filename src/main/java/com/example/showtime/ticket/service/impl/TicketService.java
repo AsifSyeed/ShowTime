@@ -4,10 +4,13 @@ import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.model.response.EventResponse;
 import com.example.showtime.event.services.IEventService;
+import com.example.showtime.ticket.model.entity.Category;
 import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.ticket.model.request.BuyTicketRequest;
 import com.example.showtime.ticket.model.response.BuyTicketResponse;
+import com.example.showtime.ticket.repository.CategoryRepository;
 import com.example.showtime.ticket.repository.TicketRepository;
+import com.example.showtime.ticket.service.ICategoryService;
 import com.example.showtime.ticket.service.ITicketService;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.repository.UserRepository;
@@ -33,6 +36,7 @@ public class TicketService implements ITicketService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
     private final IEventService eventService;
+    private final ICategoryService categoryService;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -69,12 +73,14 @@ public class TicketService implements ITicketService {
                     .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
 
             Event selectedEvent = eventService.getEventById(buyTicketRequest.getEventId());
+            Category selectedCategory = categoryService.getCategoryByIdAndEventId(buyTicketRequest.getTicketCategory(), buyTicketRequest.getEventId());
 
             ticket.setTicketQrCode(generateQRCode(selectedEvent));
             ticket.setUsed(false);
             ticket.setActive(true);
             ticket.setEventId(selectedEvent.getEventId());
             ticket.setValidityDate(selectedEvent.getEventEndDate());
+            ticket.setTicketCategory(selectedCategory.getCategoryName());
             ticket.setTicketOwner(createdBy.getEmail());
             ticketRepository.save(ticket);
             eventService.updateAvailableTickets(selectedEvent.getEventId());
@@ -88,6 +94,7 @@ public class TicketService implements ITicketService {
     private void validateRequest(BuyTicketRequest buyTicketRequest) {
         if (Objects.isNull(buyTicketRequest) ||
                 StringUtils.isEmpty(buyTicketRequest.getEventId()) ||
+                Objects.isNull(buyTicketRequest.getTicketCategory()) ||
                 Objects.isNull(buyTicketRequest.getNumberOfTicket())) {
 
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Request body is not valid");
@@ -99,9 +106,23 @@ public class TicketService implements ITicketService {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event not found");
         }
 
-        if (selectedEvent.getEventCapacity() - buyTicketRequest.getNumberOfTicket() < 0) {
-            throw new BaseException(HttpStatus.NOT_ACCEPTABLE.value(), "Tickets are out of stock");
+        if (!isTicketInStock(buyTicketRequest.getTicketCategory(), buyTicketRequest.getEventId(), buyTicketRequest.getNumberOfTicket())) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket is not in stock");
         }
+    }
+
+    private boolean isTicketInStock(Long category, String event, Long numberOfTicket) {
+        Category selectedCategory = categoryService.getCategoryByIdAndEventId(category, event);
+
+        if (selectedCategory == null) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Category not found");
+        }
+
+        if (selectedCategory.getCategoryAvailableCount() - numberOfTicket > 0) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override

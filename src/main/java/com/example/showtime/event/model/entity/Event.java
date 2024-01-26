@@ -1,11 +1,9 @@
 package com.example.showtime.event.model.entity;
 
-import javax.persistence.*;
-
-import com.example.showtime.user.model.entity.UserAccount;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.*;
 import java.util.Date;
 
 @Getter
@@ -22,6 +20,9 @@ public class Event {
 
     @Column(name = "EVENT_CAPACITY")
     private Long eventCapacity;
+
+    @Column(name = "EVENT_AVAILABLE_COUNT")
+    private Long eventAvailableCount;
 
     @Column(name = "EVENT_START_DATE")
     private Date eventStartDate;

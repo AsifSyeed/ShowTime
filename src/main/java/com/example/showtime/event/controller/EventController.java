@@ -20,11 +20,11 @@ public class EventController {
     private final IEventService iEventService;
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<EventResponse>> createEvent(@RequestBody @Valid EventRequest eventRequest) {
+    public ResponseEntity<ApiResponse<?>> createEvent(@RequestBody @Valid EventRequest eventRequest) {
 
-        EventResponse eventResponse = iEventService.createNewEvent(eventRequest);
+        iEventService.createNewEvent(eventRequest);
 
-        ApiResponse<EventResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Event created successfully", eventResponse);
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Event created successfully", null);
 
         return ResponseEntity.ok(response);
     }

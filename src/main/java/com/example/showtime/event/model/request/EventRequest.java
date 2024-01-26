@@ -1,8 +1,10 @@
 package com.example.showtime.event.model.request;
-import javax.persistence.Column;
+
+import com.example.showtime.ticket.model.request.CategoryRequest;
 import lombok.*;
 
 import java.util.Date;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,4 +21,6 @@ public class EventRequest {
     private Date eventEndDate;
 
     private String eventQrCode;
+
+    private List<CategoryRequest> categoryList;
 }

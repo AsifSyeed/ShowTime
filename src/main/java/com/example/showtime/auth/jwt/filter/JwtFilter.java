@@ -1,6 +1,8 @@
 package com.example.showtime.auth.jwt.filter;
 
+import com.example.showtime.admin.service.imp.AdminDetailsServiceImplementation;
 import com.example.showtime.auth.jwt.utlis.JwtUtil;
+import com.example.showtime.user.enums.UserRole;
 import com.example.showtime.user.service.imp.UserDetailsServiceImplementation;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,11 +22,13 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final UserDetailsServiceImplementation userDetailsService;
+    private final AdminDetailsServiceImplementation adminDetailsService;
 
     private final JwtUtil jwtTokenUtil;
 
-    public JwtFilter(UserDetailsServiceImplementation userDetailsService, JwtUtil jwtTokenUtil) {
+    public JwtFilter(UserDetailsServiceImplementation userDetailsService, AdminDetailsServiceImplementation adminDetailsService, JwtUtil jwtTokenUtil) {
         this.userDetailsService = userDetailsService;
+        this.adminDetailsService = adminDetailsService;
         this.jwtTokenUtil = jwtTokenUtil;
     }
 
@@ -54,11 +58,19 @@ public class JwtFilter extends OncePerRequestFilter {
         // Once we get the token validate it.
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+            int role = Integer.parseInt(jwtTokenUtil.getUserRoleFromToken(jwtToken));
+
+            UserDetails userDetails = null;
+
+            if (role == UserRole.ADMIN.getValue()) {
+                userDetails = this.adminDetailsService.loadUserByUsername(username);
+            } else if (role == UserRole.USER.getValue()) {
+                userDetails = this.userDetailsService.loadUserByUsername(username);
+            }
 
             // if token is valid configure Spring Security to manually set
             // authentication
-            if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
+            if ((userDetails != null) && jwtTokenUtil.validateToken(jwtToken, userDetails)) {
 
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails, userDetails.getPassword(), userDetails.getAuthorities());

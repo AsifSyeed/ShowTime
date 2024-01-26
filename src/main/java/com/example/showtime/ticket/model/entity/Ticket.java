@@ -34,4 +34,7 @@ public class Ticket {
 
     @Column(name = "TICKET_OWNER")
     private String ticketOwner;
+
+    @Column(name = "TICKET_CATEGORY")
+    private String ticketCategory;
  }

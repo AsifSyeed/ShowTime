@@ -39,6 +39,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             "/api/v1/event/all",
             "/api/v1/user/signup",
             "/api/v1/auth/token",
+            "/api/v1/auth/admin/token",
             "/v3/api-docs",
             "/v2/api-docs",
             "/swagger-resources/**",

@@ -2,7 +2,7 @@ package com.example.showtime.user.enums;
 
 
 public enum UserRole {
-    CUSTOMER(1),
+    USER(1),
     ADMIN(2);
 
     private final int value;

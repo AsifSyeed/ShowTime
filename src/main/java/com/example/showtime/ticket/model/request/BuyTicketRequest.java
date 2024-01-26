@@ -9,5 +9,6 @@ import lombok.*;
 @Builder
 public class BuyTicketRequest {
     private String eventId;
+    private Long ticketCategory;
     private Long numberOfTicket;
 }

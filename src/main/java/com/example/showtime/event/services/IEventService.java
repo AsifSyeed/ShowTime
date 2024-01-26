@@ -7,7 +7,7 @@ import com.example.showtime.event.model.response.EventResponse;
 import java.util.List;
 
 public interface IEventService {
-    EventResponse createNewEvent(EventRequest eventRequest);
+    void createNewEvent(EventRequest eventRequest);
 
     List<EventResponse> getAllEvents();
 

@@ -1,9 +1,12 @@
 package com.example.showtime.event.model.response;
 
+import com.example.showtime.ticket.model.entity.Category;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -12,7 +15,9 @@ import lombok.Setter;
 public class EventResponse {
     private String eventName;
     private long eventCapacity;
+    private long eventAvailableTickets;
     private String eventId;
     private  String eventStartDate;
     private  String eventEndDate;
+    private List<Category> categoryList;
 }

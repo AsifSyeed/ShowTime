@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommonController {
     @GetMapping("/")
     public ResponseEntity<String> getBaseResponse() {
-        String title = "Welcome to ShowTime!";
+        String title = "Welcome to Counters BD!";
         String subtitle = "Service is running";
         String response = String.format("%s\n%s", title, subtitle);
         return ResponseEntity.status(HttpStatus.OK.value()).body(response);

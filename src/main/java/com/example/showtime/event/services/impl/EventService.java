@@ -1,11 +1,16 @@
 package com.example.showtime.event.services.impl;
 
+import com.example.showtime.admin.model.entity.Admin;
+import com.example.showtime.admin.repository.AdminRepository;
 import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.model.request.EventRequest;
 import com.example.showtime.event.model.response.EventResponse;
 import com.example.showtime.event.repository.EventRepository;
 import com.example.showtime.event.services.IEventService;
+import com.example.showtime.ticket.model.entity.Category;
+import com.example.showtime.ticket.model.request.CategoryRequest;
+import com.example.showtime.ticket.service.ICategoryService;
 import com.example.showtime.user.enums.UserRole;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.repository.UserRepository;
@@ -32,25 +37,20 @@ public class EventService implements IEventService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final AdminRepository adminRepository;
+    private final ICategoryService categoryService;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public EventResponse createNewEvent(EventRequest eventRequest) {
+    public void createNewEvent(EventRequest eventRequest) {
 
         try {
             validateRequest(eventRequest);
 
             Event event = prepareEventModel(eventRequest);
+            categoryService.createCategory(eventRequest.getCategoryList(), event.getEventId());
 
             eventRepository.save(event);
-
-            return EventResponse.builder()
-                    .eventName(event.getEventName())
-                    .eventCapacity(event.getEventCapacity())
-                    .eventId(event.getEventId())
-                    .eventStartDate(String.valueOf(event.getEventStartDate()))
-                    .eventEndDate(String.valueOf(event.getEventEndDate()))
-                    .build();
         } catch (AccessDeniedException e) {
             throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
         }
@@ -63,9 +63,11 @@ public class EventService implements IEventService {
                 .map(event -> EventResponse.builder()
                         .eventName(event.getEventName())
                         .eventCapacity(event.getEventCapacity())
+                        .eventAvailableTickets(event.getEventAvailableCount())
                         .eventId(event.getEventId())
                         .eventStartDate(String.valueOf(event.getEventStartDate()))
                         .eventEndDate(String.valueOf(event.getEventEndDate()))
+                        .categoryList(categoryService.getAllCategoriesByEventId(event.getEventId()))
                         .build())
                 .collect(Collectors.toList());
     }
@@ -96,13 +98,14 @@ public class EventService implements IEventService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String createdByUserEmail = authentication.getName();
 
-        UserAccount createdBy = userRepository.findByEmail(createdByUserEmail)
-                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+        Admin createdBy = adminRepository.findByEmail(createdByUserEmail)
+                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "Admin not found"));
 
         event.setEventName(eventRequest.getEventName());
         event.setEventStartDate(eventRequest.getEventStartDate());
         event.setEventEndDate(eventRequest.getEventEndDate());
         event.setEventCapacity(eventRequest.getEventCapacity());
+        event.setEventAvailableCount(eventRequest.getEventCapacity());
         event.setEventId(generateRandomString(eventRequest.getEventName()));
         event.setIsActive(getEventStatus(eventRequest.getEventEndDate()));
         event.setCreatedBy(createdBy.getEmail());
@@ -142,6 +145,20 @@ public class EventService implements IEventService {
         if (eventRequest.getEventEndDate().before(eventRequest.getEventStartDate())) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event end date cannot be greater than event start date");
         }
+
+        if (checkTotalCapacity(eventRequest.getCategoryList()) > eventRequest.getEventCapacity()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Total capacity is not valid");
+        }
+    }
+
+    private Long checkTotalCapacity(List<CategoryRequest> categoryList) {
+        Long totalCapacity = 0L;
+
+        for (CategoryRequest category : categoryList) {
+            totalCapacity += category.getCategoryCapacity();
+        }
+
+        return totalCapacity;
     }
 
     private String generateRandomString(String eventName) {

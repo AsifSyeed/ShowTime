@@ -45,9 +45,9 @@ public class AuthService implements IAuthService {
         try {
             validateRequest(authRequest);
 
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
-            );
+//            authenticationManager.authenticate(
+//                    new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
+//            );
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getEmail());
             String token = jwtUtil.generateToken(userDetails, authRequest.getUserRole());
@@ -67,9 +67,9 @@ public class AuthService implements IAuthService {
         try {
             validateRequestForAdmin(authRequest);
 
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
-            );
+//            authenticationManager.authenticate(
+//                    new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
+//            );
 
             UserDetails userDetails = adminDetailsService.loadUserByUsername(authRequest.getEmail());
             String token = jwtUtil.generateToken(userDetails, authRequest.getUserRole());
