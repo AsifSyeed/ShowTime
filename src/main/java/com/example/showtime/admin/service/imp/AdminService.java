@@ -5,10 +5,13 @@ import com.example.showtime.admin.model.request.AdminSignUpRequest;
 import com.example.showtime.admin.repository.AdminRepository;
 import com.example.showtime.admin.service.IAdminService;
 import com.example.showtime.common.exception.BaseException;
+import com.example.showtime.common.model.response.UserProfileResponse;
 import com.example.showtime.user.enums.UserRole;
+import com.example.showtime.user.model.entity.UserAccount;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,6 +34,25 @@ public class AdminService implements IAdminService {
         Admin admin = prepareAdminModel(adminSignUpRequest);
 
         adminRepository.save(admin);
+    }
+
+    @Override
+    public UserProfileResponse getAdminProfile() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String createdByUserEmail = authentication.getName();
+
+            Admin admin = adminRepository.findByEmail(createdByUserEmail)
+                    .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+
+            return UserProfileResponse.builder()
+                    .userName(admin.getAdminName())
+                    .emailId(admin.getEmail())
+                    .phoneNumber(admin.getPhoneNumber())
+                    .build();
+        } catch (AccessDeniedException e) {
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
+        }
     }
 
     private Admin prepareAdminModel(AdminSignUpRequest adminSignUpRequest) {

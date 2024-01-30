@@ -2,6 +2,7 @@ package com.example.showtime.user.controller;
 
 import com.example.showtime.user.model.request.SignUpRequest;
 import com.example.showtime.common.model.response.ApiResponse;
+import com.example.showtime.common.model.response.UserProfileResponse;
 import com.example.showtime.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,16 @@ public class UserController {
         iUserService.signUpUser(signUpRequest);
 
         ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "User signed up successfully", null);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserProfileResponse>> getUserProfile() {
+
+        UserProfileResponse userProfileResponse = iUserService.getUserProfile();
+
+        ApiResponse<UserProfileResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "User profile fetched successfully", userProfileResponse);
 
         return ResponseEntity.ok(response);
     }

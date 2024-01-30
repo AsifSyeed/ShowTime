@@ -4,11 +4,15 @@ import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.user.enums.UserRole;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.model.request.SignUpRequest;
+import com.example.showtime.common.model.response.UserProfileResponse;
 import com.example.showtime.user.repository.UserRepository;
 import com.example.showtime.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +35,25 @@ public class UserService implements IUserService {
         UserAccount userAccount = prepareUserModel(signUpRequest);
 
         userRepository.save(userAccount);
+    }
+
+    @Override
+    public UserProfileResponse getUserProfile() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String createdByUserEmail = authentication.getName();
+
+            UserAccount userAccount = userRepository.findByEmail(createdByUserEmail)
+                    .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+
+            return UserProfileResponse.builder()
+                    .userName(userAccount.getUserName())
+                    .emailId(userAccount.getEmail())
+                    .phoneNumber(userAccount.getPhoneNumber())
+                    .build();
+        } catch (AccessDeniedException e) {
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
+        }
     }
 
     private void validateRequest(SignUpRequest signUpRequest) {
