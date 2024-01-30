@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -54,6 +55,11 @@ public class UserService implements IUserService {
         } catch (AccessDeniedException e) {
             throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
         }
+    }
+
+    @Override
+    public List<UserAccount> getUserList() {
+        return userRepository.findAll();
     }
 
     private void validateRequest(SignUpRequest signUpRequest) {

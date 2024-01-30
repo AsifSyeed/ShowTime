@@ -8,6 +8,7 @@ import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.common.model.response.UserProfileResponse;
 import com.example.showtime.user.enums.UserRole;
 import com.example.showtime.user.model.entity.UserAccount;
+import com.example.showtime.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
@@ -17,14 +18,19 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AdminService implements IAdminService {
     private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
+    private final IUserService userService;
 
 
     @Override
@@ -53,6 +59,30 @@ public class AdminService implements IAdminService {
         } catch (AccessDeniedException e) {
             throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
         }
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public List<UserProfileResponse> getUserList() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .orElse(null);
+
+        if (userRole == null || Integer.parseInt(userRole) != UserRole.ADMIN.getValue()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "You are not authorized");
+        }
+
+        List<UserAccount> userList = userService.getUserList();
+
+        return userList.stream()
+                .map(userAccount -> UserProfileResponse.builder()
+                        .userName(userAccount.getUserName())
+                        .emailId(userAccount.getEmail())
+                        .phoneNumber(userAccount.getPhoneNumber())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private Admin prepareAdminModel(AdminSignUpRequest adminSignUpRequest) {

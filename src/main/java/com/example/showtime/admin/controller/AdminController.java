@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:3000", maxAge = 3600)
 @RestController
@@ -34,6 +35,16 @@ public class AdminController {
         UserProfileResponse userProfileResponse = iAdminService.getAdminProfile();
 
         ApiResponse<UserProfileResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "User profile fetched successfully", userProfileResponse);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/users/list")
+    public ResponseEntity<ApiResponse<List<UserProfileResponse>>> getUserList() {
+
+        List<UserProfileResponse> userProfileResponse = iAdminService.getUserList();
+
+        ApiResponse<List<UserProfileResponse>> response = new ApiResponse<>(HttpStatus.OK.value(), "User profile fetched successfully", userProfileResponse);
 
         return ResponseEntity.ok(response);
     }
