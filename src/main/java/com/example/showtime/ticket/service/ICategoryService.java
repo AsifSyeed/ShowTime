@@ -10,4 +10,6 @@ public interface ICategoryService {
     Category getCategoryByIdAndEventId(Long categoryId, String eventId);
     void createCategory(List<CategoryRequest> categoryList, String eventId);
     List<Category> getAllCategoriesByEventId(String eventId);
+
+    void updateAvailableTickets(Long categoryId, String eventId);
 }

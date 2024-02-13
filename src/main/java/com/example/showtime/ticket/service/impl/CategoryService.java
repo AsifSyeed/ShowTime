@@ -38,6 +38,13 @@ public class CategoryService implements ICategoryService {
         return categoryRepository.findAllByEventId(eventId);
     }
 
+    @Override
+    public void updateAvailableTickets(Long categoryId, String eventId) {
+        Category category = getCategoryByIdAndEventId(categoryId, eventId);
+        category.setCategoryAvailableCount(category.getCategoryAvailableCount() - 1);
+        categoryRepository.save(category);
+    }
+
     private void prepareCategoryModel(List<CategoryRequest> categoryList, String eventId) {
 
         for (int i = 0; i < categoryList.size(); i++) {

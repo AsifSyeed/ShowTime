@@ -24,7 +24,7 @@ public class TicketController {
 
         List<BuyTicketResponse> buyTicketResponse = ticketService.createTicket(buyTicketRequest);
 
-        ApiResponse<List<BuyTicketResponse>> response = new ApiResponse<>(HttpStatus.OK.value(), "Event created successfully", buyTicketResponse);
+        ApiResponse<List<BuyTicketResponse>> response = new ApiResponse<>(HttpStatus.OK.value(), "Ticket created successfully", buyTicketResponse);
 
         return ResponseEntity.ok(response);
     }

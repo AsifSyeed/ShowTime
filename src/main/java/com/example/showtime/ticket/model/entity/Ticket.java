@@ -36,5 +36,5 @@ public class Ticket {
     private String ticketOwner;
 
     @Column(name = "TICKET_CATEGORY")
-    private String ticketCategory;
+    private Long ticketCategory;
  }

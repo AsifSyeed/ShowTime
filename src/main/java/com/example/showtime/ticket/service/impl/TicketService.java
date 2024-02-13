@@ -1,6 +1,7 @@
 package com.example.showtime.ticket.service.impl;
 
 import com.example.showtime.common.exception.BaseException;
+import com.example.showtime.common.pdf.PdfGenerator;
 import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.model.response.EventResponse;
 import com.example.showtime.event.services.IEventService;
@@ -38,6 +39,8 @@ public class TicketService implements ITicketService {
     private final IEventService eventService;
     private final ICategoryService categoryService;
 
+    PdfGenerator pdfGenerator = new PdfGenerator();
+
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public List<BuyTicketResponse> createTicket(BuyTicketRequest buyTicketRequest) {
@@ -73,17 +76,18 @@ public class TicketService implements ITicketService {
                     .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
 
             Event selectedEvent = eventService.getEventById(buyTicketRequest.getEventId());
-            Category selectedCategory = categoryService.getCategoryByIdAndEventId(buyTicketRequest.getTicketCategory(), buyTicketRequest.getEventId());
 
             ticket.setTicketQrCode(generateQRCode(selectedEvent));
             ticket.setUsed(false);
             ticket.setActive(true);
             ticket.setEventId(selectedEvent.getEventId());
             ticket.setValidityDate(selectedEvent.getEventEndDate());
-            ticket.setTicketCategory(selectedCategory.getCategoryName());
+            ticket.setTicketCategory(buyTicketRequest.getTicketCategory());
             ticket.setTicketOwner(createdBy.getEmail());
             ticketRepository.save(ticket);
             eventService.updateAvailableTickets(selectedEvent.getEventId());
+            categoryService.updateAvailableTickets(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId());
+            pdfGenerator.generateTicketPdf(createdBy, ticket);
 
             newTickets.add(ticket);
         }

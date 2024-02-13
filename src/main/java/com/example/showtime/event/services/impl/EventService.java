@@ -88,7 +88,7 @@ public class EventService implements IEventService {
     @Override
     public void updateAvailableTickets(String eventId) {
         Event event = getEventById(eventId);
-        event.setEventCapacity(event.getEventCapacity() - 1);
+        event.setEventAvailableCount(event.getEventAvailableCount() - 1);
         eventRepository.save(event);
     }
 
