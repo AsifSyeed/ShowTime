@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:3000", maxAge = 3600)
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"}, maxAge = 3600)
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/admin")
@@ -44,7 +44,7 @@ public class AdminController {
 
         List<UserProfileResponse> userProfileResponse = iAdminService.getUserList();
 
-        ApiResponse<List<UserProfileResponse>> response = new ApiResponse<>(HttpStatus.OK.value(), "User profile fetched successfully", userProfileResponse);
+        ApiResponse<List<UserProfileResponse>> response = new ApiResponse<>(HttpStatus.OK.value(), "User list fetched successfully", userProfileResponse);
 
         return ResponseEntity.ok(response);
     }
