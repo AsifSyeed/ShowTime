@@ -7,6 +7,7 @@ import com.example.showtime.event.services.IEventService;
 import com.example.showtime.ticket.model.entity.Category;
 import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.ticket.model.request.BuyTicketRequest;
+import com.example.showtime.ticket.model.request.TicketOwnerInformationRequest;
 import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import com.example.showtime.ticket.repository.TicketRepository;
 import com.example.showtime.ticket.service.ICategoryService;
@@ -24,6 +25,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -52,7 +55,10 @@ public class TicketService implements ITicketService {
                     .map(ticket -> BuyTicketResponse.builder()
                             .ticketId(ticket.getTicketQrCode())
                             .eventId(ticket.getEventId())
-                            .userName(ticket.getTicketOwner())
+                            .userName(ticket.getTicketOwnerName())
+                            .userEmail(ticket.getTicketOwnerEmail())
+                            .ticketCategory(ticket.getTicketCategory())
+                            .transactionId(ticket.getTicketTransactionId())
                             .build())
                     .collect(Collectors.toList());
 
@@ -71,18 +77,26 @@ public class TicketService implements ITicketService {
                 .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
 
         Event selectedEvent = eventService.getEventById(buyTicketRequest.getEventId());
+        List<TicketOwnerInformationRequest> ticketOwners = buyTicketRequest.getTicketOwnerInformationRequest();
+        String refId = generateTransactionRefId(buyTicketRequest);
 
-        newTickets = IntStream.range(0, Math.toIntExact(buyTicketRequest.getNumberOfTicket()))
+        newTickets = IntStream.range(0, Math.toIntExact(ticketOwners.size()))
                 .parallel()
                 .mapToObj(i -> {
                     Ticket ticket = new Ticket();
                     ticket.setTicketQrCode(generateQRCode(selectedEvent));
                     ticket.setUsed(false);
                     ticket.setActive(true);
+                    ticket.setTicketTransactionId(refId);
+                    ticket.setTicketCreatedDate(Date.valueOf(LocalDate.now()));
                     ticket.setEventId(selectedEvent.getEventId());
                     ticket.setValidityDate(selectedEvent.getEventEndDate());
                     ticket.setTicketCategory(buyTicketRequest.getTicketCategory());
-                    ticket.setTicketOwner(createdBy.getEmail());
+                    ticket.setTicketOwnerName(ticketOwners.get(i).getTicketOwnerName());
+                    ticket.setTicketOwnerEmail(ticketOwners.get(i).getTicketOwnerEmail());
+                    ticket.setTicketOwnerNumber(ticketOwners.get(i).getTicketOwnerNumber());
+                    ticket.setTicketCreatedBy(createdByUserEmail);
+                    ticket.setTicketPrice(categoryService.getTicketPrice(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId()));
                     ticketRepository.save(ticket);
                     eventService.updateAvailableTickets(selectedEvent.getEventId());
                     categoryService.updateAvailableTickets(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId());
@@ -105,7 +119,7 @@ public class TicketService implements ITicketService {
         if (Objects.isNull(buyTicketRequest) ||
                 StringUtils.isEmpty(buyTicketRequest.getEventId()) ||
                 Objects.isNull(buyTicketRequest.getTicketCategory()) ||
-                Objects.isNull(buyTicketRequest.getNumberOfTicket())) {
+                Objects.isNull(buyTicketRequest.getTicketOwnerInformationRequest())) {
 
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Request body is not valid");
         }
@@ -116,7 +130,7 @@ public class TicketService implements ITicketService {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event not found");
         }
 
-        if (!isTicketInStock(buyTicketRequest.getTicketCategory(), buyTicketRequest.getEventId(), buyTicketRequest.getNumberOfTicket())) {
+        if (!isTicketInStock(buyTicketRequest.getTicketCategory(), buyTicketRequest.getEventId(), Long.valueOf(buyTicketRequest.getTicketOwnerInformationRequest().size()))) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket is not in stock");
         }
     }
@@ -159,5 +173,10 @@ public class TicketService implements ITicketService {
         List<Ticket> ticketsFromEvent = getTicketsByEventId(event.getEventId());
 
         return event.getEventId() + event.getId() + (ticketsFromEvent.size() + 1); // Placeholder for the actual generation code
+    }
+
+    private String generateTransactionRefId(BuyTicketRequest buyTicketRequest) {
+        //Generate a 9 digit reference number with the first 3 digits of the event id but in random order and 6 random numbers
+        return buyTicketRequest.getEventId().substring(0, 3) + (int) (Math.random() * 1000000);
     }
 }

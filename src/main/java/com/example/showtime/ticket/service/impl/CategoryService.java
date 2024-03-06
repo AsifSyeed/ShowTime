@@ -45,6 +45,11 @@ public class CategoryService implements ICategoryService {
         categoryRepository.save(category);
     }
 
+    @Override
+    public Double getTicketPrice(Long ticketCategory, String eventId) {
+        return getCategoryByIdAndEventId(ticketCategory, eventId).getCategoryPrice();
+    }
+
     private void prepareCategoryModel(List<CategoryRequest> categoryList, String eventId) {
 
         for (int i = 0; i < categoryList.size(); i++) {

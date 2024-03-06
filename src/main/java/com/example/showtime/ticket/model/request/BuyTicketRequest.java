@@ -2,6 +2,8 @@ package com.example.showtime.ticket.model.request;
 
 import lombok.*;
 
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -10,5 +12,5 @@ import lombok.*;
 public class BuyTicketRequest {
     private String eventId;
     private Long ticketCategory;
-    private Long numberOfTicket;
+    private List<TicketOwnerInformationRequest> ticketOwnerInformationRequest;
 }

@@ -32,9 +32,27 @@ public class Ticket {
     @Column(name = "EVENT_ID")
     private String eventId;
 
-    @Column(name = "TICKET_OWNER")
-    private String ticketOwner;
+    @Column(name = "TICKET_OWNER_NAME")
+    private String ticketOwnerName;
+
+    @Column(name = "TICKET_OWNER_NUMBER")
+    private String ticketOwnerNumber;
+
+    @Column(name = "TICKET_OWNER_EMAIL")
+    private String ticketOwnerEmail;
 
     @Column(name = "TICKET_CATEGORY")
     private Long ticketCategory;
+
+    @Column(name = "TICKET_CREATED_BY")
+    private String ticketCreatedBy;
+
+    @Column(name = "TICKET_CREATED_DATE")
+    private Date ticketCreatedDate;
+
+    @Column(name = "TICKET_TRANSACTION_ID")
+    private String ticketTransactionId;
+
+    @Column(name = "TICKET_PRICE")
+    private Double ticketPrice;
  }

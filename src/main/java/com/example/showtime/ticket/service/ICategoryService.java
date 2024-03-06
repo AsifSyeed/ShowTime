@@ -12,4 +12,6 @@ public interface ICategoryService {
     List<Category> getAllCategoriesByEventId(String eventId);
 
     void updateAvailableTickets(Long categoryId, String eventId);
+
+    Double getTicketPrice(Long ticketCategory, String eventId);
 }
