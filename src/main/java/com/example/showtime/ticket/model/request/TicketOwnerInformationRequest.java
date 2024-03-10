@@ -11,5 +11,4 @@ public class TicketOwnerInformationRequest {
     private String ticketOwnerName;
     private String ticketOwnerNumber;
     private String ticketOwnerEmail;
-    private Double ticketPrice;
 }

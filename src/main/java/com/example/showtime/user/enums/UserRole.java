@@ -1,6 +1,9 @@
 package com.example.showtime.user.enums;
 
 
+import lombok.Getter;
+
+@Getter
 public enum UserRole {
     USER(1),
     ADMIN(2);
@@ -11,7 +14,4 @@ public enum UserRole {
         this.value = value;
     }
 
-    public int getValue() {
-        return value;
-    }
 }

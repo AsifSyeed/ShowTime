@@ -12,6 +12,9 @@ import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import com.example.showtime.ticket.repository.TicketRepository;
 import com.example.showtime.ticket.service.ICategoryService;
 import com.example.showtime.ticket.service.ITicketService;
+import com.example.showtime.transaction.enums.TransactionStatusEnum;
+import com.example.showtime.transaction.model.entity.TransactionItem;
+import com.example.showtime.transaction.service.ITransactionService;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Date;
-import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -40,6 +42,7 @@ public class TicketService implements ITicketService {
     private final UserRepository userRepository;
     private final IEventService eventService;
     private final ICategoryService categoryService;
+    private final ITransactionService transactionService;
 
     PdfGenerator pdfGenerator = new PdfGenerator();
 
@@ -77,10 +80,10 @@ public class TicketService implements ITicketService {
                 .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
 
         Event selectedEvent = eventService.getEventById(buyTicketRequest.getEventId());
-        List<TicketOwnerInformationRequest> ticketOwners = buyTicketRequest.getTicketOwnerInformationRequest();
+        List<TicketOwnerInformationRequest> ticketOwnerInformation = buyTicketRequest.getTicketOwnerInformationRequest();
         String refId = generateTransactionRefId(buyTicketRequest);
 
-        newTickets = IntStream.range(0, Math.toIntExact(ticketOwners.size()))
+        newTickets = IntStream.range(0, Math.toIntExact(ticketOwnerInformation.size()))
                 .parallel()
                 .mapToObj(i -> {
                     Ticket ticket = new Ticket();
@@ -88,16 +91,15 @@ public class TicketService implements ITicketService {
                     ticket.setUsed(false);
                     ticket.setActive(true);
                     ticket.setTicketTransactionId(refId);
-                    ticket.setTicketCreatedDate(Date.valueOf(LocalDate.now()));
+                    ticket.setTicketCreatedDate(Calendar.getInstance().getTime());
                     ticket.setEventId(selectedEvent.getEventId());
                     ticket.setValidityDate(selectedEvent.getEventEndDate());
                     ticket.setTicketCategory(buyTicketRequest.getTicketCategory());
-                    ticket.setTicketOwnerName(ticketOwners.get(i).getTicketOwnerName());
-                    ticket.setTicketOwnerEmail(ticketOwners.get(i).getTicketOwnerEmail());
-                    ticket.setTicketOwnerNumber(ticketOwners.get(i).getTicketOwnerNumber());
+                    ticket.setTicketOwnerName(ticketOwnerInformation.get(i).getTicketOwnerName());
+                    ticket.setTicketOwnerEmail(ticketOwnerInformation.get(i).getTicketOwnerEmail());
+                    ticket.setTicketOwnerNumber(ticketOwnerInformation.get(i).getTicketOwnerNumber());
                     ticket.setTicketCreatedBy(createdByUserEmail);
                     ticket.setTicketPrice(categoryService.getTicketPrice(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId()));
-                    ticketRepository.save(ticket);
                     eventService.updateAvailableTickets(selectedEvent.getEventId());
                     categoryService.updateAvailableTickets(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId());
 
@@ -107,6 +109,17 @@ public class TicketService implements ITicketService {
                 })
                 .collect(Collectors.toList());
 
+        TransactionItem transactionItem = new TransactionItem();
+        transactionItem.setTransactionRefNo(refId);
+        transactionItem.setTotalAmount(newTickets.stream().mapToDouble(Ticket::getTicketPrice).sum());
+        transactionItem.setEventId(selectedEvent.getEventId());
+        transactionItem.setTransactionDate(Calendar.getInstance().getTime());
+        transactionItem.setTransactionStatus(TransactionStatusEnum.INITIATED.getValue());
+        transactionItem.setUserId(createdByUserEmail);
+
+        transactionService.saveTransaction(transactionItem);
+
+        ticketRepository.saveAll(newTickets);
         return newTickets;
     }
 
