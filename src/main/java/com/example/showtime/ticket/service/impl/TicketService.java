@@ -80,8 +80,8 @@ public class TicketService implements ITicketService {
                 .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
 
         Event selectedEvent = eventService.getEventById(buyTicketRequest.getEventId());
-        List<TicketOwnerInformationRequest> ticketOwnerInformation = buyTicketRequest.getTicketOwnerInformationRequest();
-        String refId = generateTransactionRefId(buyTicketRequest);
+        List<TicketOwnerInformationRequest> ticketOwnerInformation = buyTicketRequest.getTicketOwnerInformation();
+        String refId = transactionService.generateUniqueIdForTransaction(selectedEvent.getEventId().substring(0, 2));
 
         newTickets = IntStream.range(0, Math.toIntExact(ticketOwnerInformation.size()))
                 .parallel()
@@ -132,7 +132,7 @@ public class TicketService implements ITicketService {
         if (Objects.isNull(buyTicketRequest) ||
                 StringUtils.isEmpty(buyTicketRequest.getEventId()) ||
                 Objects.isNull(buyTicketRequest.getTicketCategory()) ||
-                Objects.isNull(buyTicketRequest.getTicketOwnerInformationRequest())) {
+                Objects.isNull(buyTicketRequest.getTicketOwnerInformation())) {
 
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Request body is not valid");
         }
@@ -143,7 +143,7 @@ public class TicketService implements ITicketService {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event not found");
         }
 
-        if (!isTicketInStock(buyTicketRequest.getTicketCategory(), buyTicketRequest.getEventId(), Long.valueOf(buyTicketRequest.getTicketOwnerInformationRequest().size()))) {
+        if (!isTicketInStock(buyTicketRequest.getTicketCategory(), buyTicketRequest.getEventId(), Long.valueOf(buyTicketRequest.getTicketOwnerInformation().size()))) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket is not in stock");
         }
     }

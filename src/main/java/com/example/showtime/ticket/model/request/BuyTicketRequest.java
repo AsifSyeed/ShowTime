@@ -12,5 +12,5 @@ import java.util.List;
 public class BuyTicketRequest {
     private String eventId;
     private Long ticketCategory;
-    private List<TicketOwnerInformationRequest> ticketOwnerInformationRequest;
+    private List<TicketOwnerInformationRequest> ticketOwnerInformation;
 }

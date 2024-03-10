@@ -6,14 +6,11 @@ import com.example.showtime.transaction.service.ITransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import static jdk.jfr.internal.handlers.EventHandler.timestamp;
-
 @Service
 @RequiredArgsConstructor
 public class TransactionService implements ITransactionService {
     private final TransactionRepository transactionRepository;
 
-    private static final int NODE_ID_BITS = 10;
     private static final int SEQUENCE_BITS = 12;
     private volatile long lastTimestamp = -1L;
     private volatile long sequence = 0L;
@@ -30,33 +27,32 @@ public class TransactionService implements ITransactionService {
         return generateUniqueId(prefix);
     }
 
-    private synchronized String generateUniqueId(String prefix) {
-        long currentTimestamp = timestamp();
+    private String generateUniqueId(String prefix) {
+        long timestamp = System.currentTimeMillis();
 
-        if (currentTimestamp < lastTimestamp)
-            throw new IllegalStateException("Bad System Clock!");
+        if (timestamp < lastTimestamp) {
+            throw new RuntimeException("Clock moved backwards. Refusing to generate id for " + (lastTimestamp - timestamp) + " milliseconds");
+        }
 
-        if (currentTimestamp == lastTimestamp) {
+        if (lastTimestamp == timestamp) {
             sequence = (sequence + 1) & MAX_SEQUENCE;
-            if (sequence == 0)
-                currentTimestamp = waitNextMillis(currentTimestamp);
-
+            if (sequence == 0) {
+                timestamp = tilNextMillis(lastTimestamp);
+            }
         } else {
             sequence = 0;
         }
 
-        lastTimestamp = currentTimestamp;
+        lastTimestamp = timestamp;
 
-        long id = currentTimestamp << (NODE_ID_BITS + SEQUENCE_BITS);
-        id |= ((long) nodeId << SEQUENCE_BITS);
-        id |= sequence;
-        return prefix.concat(String.valueOf(id));
+        return String.format("%s-%d-%d-%d", prefix, timestamp, nodeId, sequence);
     }
 
-    private long waitNextMillis(long currentTimestamp) {
-        while (currentTimestamp == lastTimestamp) {
-            currentTimestamp = timestamp();
+    private long tilNextMillis(long lastTimestamp) {
+        long timestamp = System.currentTimeMillis();
+        while (timestamp <= lastTimestamp) {
+            timestamp = System.currentTimeMillis();
         }
-        return currentTimestamp;
+        return timestamp;
     }
 }

@@ -19,13 +19,12 @@ import java.io.IOException;
 
 public class PdfGenerator {
 
-    private static String TEMPLATE_PATH = "src/main/resources/assets/generic_ticket_";
-    private static String OUTPUT_PATH = "src/main/resources/assets/";
+    private static String OUTPUT_PATH = "";
 
     public void generateTicketPdf(UserAccount createdBy, Ticket ticket) {
         //add eventId from ticket to the template path
-        TEMPLATE_PATH += ticket.getEventId() + ".pdf";
-        OUTPUT_PATH += ticket.getTicketQrCode() + ".pdf";
+        String TEMPLATE_PATH = "src/main/resources/assets/generic_ticket_" + ticket.getEventId() + ".pdf";
+        OUTPUT_PATH = "src/main/resources/assets/" + ticket.getTicketQrCode() + ".pdf";
 
         try {
             PDDocument document = Loader.loadPDF(new File(TEMPLATE_PATH));
@@ -34,18 +33,18 @@ public class PdfGenerator {
             try (PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 setFontAndColor(contentStream);
 
-                addText(contentStream, createdBy.getUserName(), 175, 545);
-                addText(contentStream, createdBy.getEmail(), 175, 525);
-                addText(contentStream, createdBy.getPhoneNumber(), 175, 505);
+                addText(contentStream, createdBy.getUserName(), 545);
+                addText(contentStream, createdBy.getEmail(), 525);
+                addText(contentStream, createdBy.getPhoneNumber(), 505);
 
                 String qrCodeData = ticket.getTicketQrCode();
-                BufferedImage qrCodeImage = null;
+                BufferedImage qrCodeImage;
                 try {
                     qrCodeImage = QRCodeGenerator.getQRCodeImage(qrCodeData, 150, 150);
                 } catch (WriterException e) {
                     throw new RuntimeException(e);
                 }
-                addImage(contentStream, document, qrCodeImage, 420, 150);
+                addImage(contentStream, document, qrCodeImage);
             }
 
             saveAndCloseDocument(document);
@@ -59,16 +58,16 @@ public class PdfGenerator {
         contentStream.setNonStrokingColor(1.0f, 1.0f, 1.0f); // RGB values for white
     }
 
-    private void addText(PDPageContentStream contentStream, String text, float x, float y) throws IOException {
+    private void addText(PDPageContentStream contentStream, String text, float y) throws IOException {
         contentStream.beginText();
-        contentStream.newLineAtOffset(x, y);
+        contentStream.newLineAtOffset((float) 175, y);
         contentStream.showText(text);
         contentStream.endText();
     }
 
-    private void addImage(PDPageContentStream contentStream, PDDocument document, BufferedImage image, float x, float y) throws IOException {
+    private void addImage(PDPageContentStream contentStream, PDDocument document, BufferedImage image) throws IOException {
         PDImageXObject qrCodeImage = LosslessFactory.createFromImage(document, image);
-        contentStream.drawImage(qrCodeImage, x, y);
+        contentStream.drawImage(qrCodeImage, (float) 420, (float) 150);
     }
 
     private void saveAndCloseDocument(PDDocument document) throws IOException {
