@@ -16,6 +16,9 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class PdfGenerator {
 
@@ -23,8 +26,19 @@ public class PdfGenerator {
 
     public void generateTicketPdf(UserAccount createdBy, Ticket ticket) {
         //add eventId from ticket to the template path
-        String TEMPLATE_PATH = "src/main/resources/assets/generic_ticket_" + ticket.getEventId() + ".pdf";
-        OUTPUT_PATH = "src/main/resources/assets/" + ticket.getTicketQrCode() + ".pdf";
+        String TEMPLATE_PATH = "src/main/resources/assets/genericTickets/generic_ticket_" + ticket.getEventId() + ".pdf";
+        // Append ticket.eventName to the output path
+        String folderPath = "src/main/resources/assets/tickets/" + ticket.getEventId() + "/";
+        OUTPUT_PATH = folderPath + ticket.getTicketQrCode() + ".pdf";
+
+        // Create the folder if it doesn't exist
+        try {
+            Path directory = Paths.get(folderPath);
+            Files.createDirectories(directory);
+        } catch (IOException e) {
+            // Handle the exception, e.g., log it or throw a runtime exception
+            e.printStackTrace();
+        }
 
         try {
             PDDocument document = Loader.loadPDF(new File(TEMPLATE_PATH));

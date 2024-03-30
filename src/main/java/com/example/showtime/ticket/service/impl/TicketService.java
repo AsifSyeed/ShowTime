@@ -60,6 +60,7 @@ public class TicketService implements ITicketService {
                             .eventId(ticket.getEventId())
                             .userName(ticket.getTicketOwnerName())
                             .userEmail(ticket.getTicketOwnerEmail())
+                            .userNumber(ticket.getTicketOwnerNumber())
                             .ticketCategory(ticket.getTicketCategory())
                             .transactionId(ticket.getTicketTransactionId())
                             .build())

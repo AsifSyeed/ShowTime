@@ -21,3 +21,6 @@ server:
 jwt:
   secret: ToolFearInoculumLateralus10000DaysAenemaUndertowAdamJonesMaynardJamesKeananJustinChancellorDaneyCarrey
   exp: 1000000
+
+node:
+  id: 012358
