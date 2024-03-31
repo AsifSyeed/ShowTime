@@ -33,4 +33,7 @@ public class UserAccount {
 
     @Column(name = "PASSWORD")
     private String password;
+
+    @Column(name = "USER_FULL_NAME")
+    private String userFullName;
 }

@@ -6,6 +6,7 @@ import com.example.showtime.transaction.model.request.CheckTransactionStatusRequ
 import com.example.showtime.transaction.model.response.CheckTransactionStatusResponse;
 import com.example.showtime.transaction.repository.TransactionRepository;
 import com.example.showtime.transaction.service.ITransactionService;
+import com.example.showtime.transaction.ssl.SSLTransactionInitiator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;

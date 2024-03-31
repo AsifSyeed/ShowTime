@@ -10,6 +10,13 @@ jwt:
 node:
   id: 012358
 
+sslcommerz:
+  store:
+    id: count65fb2b409c69c
+    password: count65fb2b409c69c@ssl
+  test:
+    mode: true
+
 spring:
   profiles:
     active: dev

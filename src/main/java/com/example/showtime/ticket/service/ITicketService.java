@@ -8,7 +8,7 @@ import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import java.util.List;
 
 public interface ITicketService {
-    List<BuyTicketResponse> createTicket(BuyTicketRequest buyTicketRequest);
+    BuyTicketResponse createTicket(BuyTicketRequest buyTicketRequest);
     Ticket getTicketById(Long ticketId);
     void markTicketAsUsed(Long ticketId);
     List<Ticket> getAllTickets();

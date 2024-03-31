@@ -51,6 +51,7 @@ public class UserService implements IUserService {
                     .userName(userAccount.getUserName())
                     .emailId(userAccount.getEmail())
                     .phoneNumber(userAccount.getPhoneNumber())
+                    .userFullName(userAccount.getUserFullName())
                     .build();
         } catch (AccessDeniedException e) {
             throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
@@ -94,6 +95,7 @@ public class UserService implements IUserService {
         userAccount.setEmail(signUpRequest.getEmail());
         userAccount.setPhoneNumber(signUpRequest.getPhoneNumber());
         userAccount.setRole(signUpRequest.getUserRole());
+        userAccount.setUserFullName(signUpRequest.getUserFullName());
         userAccount.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
 
         return userAccount;

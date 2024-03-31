@@ -11,11 +11,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class BuyTicketResponse {
-    private String ticketId;
-    private String eventId;
-    private String userName;
-    private String userNumber;
-    private String userEmail;
-    private String transactionId;
-    private Long ticketCategory;
+    private String transactionRefNo;
+    private String sslPaymentUrl;
 }

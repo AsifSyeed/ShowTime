@@ -20,11 +20,11 @@ public class TicketController {
     private final ITicketService ticketService;
 
     @PostMapping("/buy")
-    public ResponseEntity<ApiResponse<List<BuyTicketResponse>>> buyTicket(@RequestBody @Valid BuyTicketRequest buyTicketRequest) {
+    public ResponseEntity<ApiResponse<BuyTicketResponse>> buyTicket(@RequestBody @Valid BuyTicketRequest buyTicketRequest) {
 
-        List<BuyTicketResponse> buyTicketResponse = ticketService.createTicket(buyTicketRequest);
+        BuyTicketResponse buyTicketResponse = ticketService.createTicket(buyTicketRequest);
 
-        ApiResponse<List<BuyTicketResponse>> response = new ApiResponse<>(HttpStatus.OK.value(), "Ticket created successfully", buyTicketResponse);
+        ApiResponse<BuyTicketResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Ticket created successfully", buyTicketResponse);
 
         return ResponseEntity.ok(response);
     }

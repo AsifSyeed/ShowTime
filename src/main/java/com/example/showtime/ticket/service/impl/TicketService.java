@@ -15,6 +15,7 @@ import com.example.showtime.ticket.service.ITicketService;
 import com.example.showtime.transaction.enums.TransactionStatusEnum;
 import com.example.showtime.transaction.model.entity.TransactionItem;
 import com.example.showtime.transaction.service.ITransactionService;
+import com.example.showtime.transaction.ssl.SSLTransactionInitiator;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,42 +44,36 @@ public class TicketService implements ITicketService {
     private final IEventService eventService;
     private final ICategoryService categoryService;
     private final ITransactionService transactionService;
+    private final SSLTransactionInitiator sslTransactionInitiator;
 
     PdfGenerator pdfGenerator = new PdfGenerator();
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public List<BuyTicketResponse> createTicket(BuyTicketRequest buyTicketRequest) {
-        try {
-            validateRequest(buyTicketRequest);
-
-            List<Ticket> newTickets = prepareTicketModel(buyTicketRequest);
-
-            return newTickets.stream()
-                    .map(ticket -> BuyTicketResponse.builder()
-                            .ticketId(ticket.getTicketQrCode())
-                            .eventId(ticket.getEventId())
-                            .userName(ticket.getTicketOwnerName())
-                            .userEmail(ticket.getTicketOwnerEmail())
-                            .userNumber(ticket.getTicketOwnerNumber())
-                            .ticketCategory(ticket.getTicketCategory())
-                            .transactionId(ticket.getTicketTransactionId())
-                            .build())
-                    .collect(Collectors.toList());
-
-        } catch (AccessDeniedException e) {
-            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
-        }
-    }
-
-    private List<Ticket> prepareTicketModel(BuyTicketRequest buyTicketRequest) {
-        List<Ticket> newTickets;
-
+    public BuyTicketResponse createTicket(BuyTicketRequest buyTicketRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String createdByUserEmail = authentication.getName();
 
         UserAccount createdBy = userRepository.findByEmail(createdByUserEmail)
                 .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+
+        try {
+            validateRequest(buyTicketRequest);
+
+            TransactionItem transactionItem = prepareTicketModel(buyTicketRequest, createdBy);
+            String sslCommerzPaymentUrl = sslTransactionInitiator.initiateSSLTransaction(transactionItem, createdBy);
+
+            return BuyTicketResponse.builder()
+                    .transactionRefNo(transactionItem.getTransactionRefNo())
+                    .sslPaymentUrl(sslCommerzPaymentUrl)
+                    .build();
+        } catch (AccessDeniedException e) {
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
+        }
+    }
+
+    private TransactionItem prepareTicketModel(BuyTicketRequest buyTicketRequest, UserAccount createdBy) {
+        List<Ticket> newTickets;
 
         Event selectedEvent = eventService.getEventById(buyTicketRequest.getEventId());
         List<TicketOwnerInformationRequest> ticketOwnerInformation = buyTicketRequest.getTicketOwnerInformation();
@@ -99,7 +94,7 @@ public class TicketService implements ITicketService {
                     ticket.setTicketOwnerName(ticketOwnerInformation.get(i).getTicketOwnerName());
                     ticket.setTicketOwnerEmail(ticketOwnerInformation.get(i).getTicketOwnerEmail());
                     ticket.setTicketOwnerNumber(ticketOwnerInformation.get(i).getTicketOwnerNumber());
-                    ticket.setTicketCreatedBy(createdByUserEmail);
+                    ticket.setTicketCreatedBy(createdBy.getEmail());
                     ticket.setTicketPrice(categoryService.getTicketPrice(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId()));
                     eventService.updateAvailableTickets(selectedEvent.getEventId());
                     categoryService.updateAvailableTickets(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId());
@@ -116,12 +111,12 @@ public class TicketService implements ITicketService {
         transactionItem.setEventId(selectedEvent.getEventId());
         transactionItem.setTransactionDate(Calendar.getInstance().getTime());
         transactionItem.setTransactionStatus(TransactionStatusEnum.INITIATED.getValue());
-        transactionItem.setUserId(createdByUserEmail);
+        transactionItem.setUserId(createdBy.getEmail());
 
         transactionService.saveTransaction(transactionItem);
 
         ticketRepository.saveAll(newTickets);
-        return newTickets;
+        return transactionItem;
     }
 
     @Async
@@ -144,7 +139,7 @@ public class TicketService implements ITicketService {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event not found");
         }
 
-        if (!isTicketInStock(buyTicketRequest.getTicketCategory(), buyTicketRequest.getEventId(), Long.valueOf(buyTicketRequest.getTicketOwnerInformation().size()))) {
+        if (!isTicketInStock(buyTicketRequest.getTicketCategory(), buyTicketRequest.getEventId(), (long) buyTicketRequest.getTicketOwnerInformation().size())) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket is not in stock");
         }
     }
