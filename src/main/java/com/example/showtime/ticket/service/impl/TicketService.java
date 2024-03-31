@@ -188,9 +188,4 @@ public class TicketService implements ITicketService {
 
         return event.getEventId() + event.getId() + (ticketsFromEvent.size() + 1); // Placeholder for the actual generation code
     }
-
-    private String generateTransactionRefId(BuyTicketRequest buyTicketRequest) {
-        //Generate a 9 digit reference number with the first 3 digits of the event id but in random order and 6 random numbers
-        return buyTicketRequest.getEventId().substring(0, 3) + (int) (Math.random() * 1000000);
-    }
 }
