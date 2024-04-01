@@ -12,4 +12,6 @@ public interface IUserService {
     UserProfileResponse getUserProfile();
 
     List<UserAccount> getUserList();
+
+    UserAccount getUserByEmail(String email);
 }

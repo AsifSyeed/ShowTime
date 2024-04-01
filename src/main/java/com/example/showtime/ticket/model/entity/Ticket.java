@@ -55,4 +55,10 @@ public class Ticket {
 
     @Column(name = "TICKET_PRICE")
     private Double ticketPrice;
+
+    @Column(name = "TICKET_FILE_PATH")
+    private String ticketFilePath;
+
+    @Column(name = "EVENT_NAME")
+    private String eventName;
  }

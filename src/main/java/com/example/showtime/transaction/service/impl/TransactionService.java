@@ -52,6 +52,11 @@ public class TransactionService implements ITransactionService {
         }
     }
 
+    @Override
+    public TransactionItem getTransactionByUserEmailAndTransactionRefNo(String email, String transactionRefNo) {
+        return transactionRepository.findByUserEmailAndTransactionRefNo(email, transactionRefNo);
+    }
+
     private TransactionItem validateRequest(CheckTransactionStatusRequest checkTransactionStatusRequest) {
         if (checkTransactionStatusRequest.getTransactionRefNo() == null || checkTransactionStatusRequest.getTransactionRefNo().isEmpty()) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction ID is required");

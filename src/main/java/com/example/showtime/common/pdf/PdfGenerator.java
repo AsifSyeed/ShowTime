@@ -4,6 +4,7 @@ import com.example.showtime.common.qr.QRCodeGenerator;
 import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.google.zxing.WriterException;
+import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -12,6 +13,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.stereotype.Component;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -20,11 +22,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Component
+@RequiredArgsConstructor
 public class PdfGenerator {
 
     private static String OUTPUT_PATH = "";
 
-    public void generateTicketPdf(UserAccount createdBy, Ticket ticket) {
+    public String generateTicketPdf(UserAccount createdBy, Ticket ticket) {
         //add eventId from ticket to the template path
         String TEMPLATE_PATH = "src/main/resources/assets/genericTickets/generic_ticket_" + ticket.getEventId() + ".pdf";
         // Append ticket.eventName to the output path
@@ -47,9 +51,9 @@ public class PdfGenerator {
             try (PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 setFontAndColor(contentStream);
 
-                addText(contentStream, createdBy.getUserName(), 545);
-                addText(contentStream, createdBy.getEmail(), 525);
-                addText(contentStream, createdBy.getPhoneNumber(), 505);
+                addText(contentStream, ticket.getTicketOwnerName(), 545);
+                addText(contentStream, ticket.getTicketOwnerEmail(), 525);
+                addText(contentStream, ticket.getTicketOwnerNumber(), 505);
 
                 String qrCodeData = ticket.getTicketQrCode();
                 BufferedImage qrCodeImage;
@@ -62,6 +66,7 @@ public class PdfGenerator {
             }
 
             saveAndCloseDocument(document);
+            return OUTPUT_PATH;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -13,4 +13,6 @@ public interface ITicketService {
     void markTicketAsUsed(Long ticketId);
     List<Ticket> getAllTickets();
     List<Ticket> getTicketsByEventId(String eventId);
+
+    List<Ticket> getTicketListByTransactionRefNo(String transactionRefNo);
 }

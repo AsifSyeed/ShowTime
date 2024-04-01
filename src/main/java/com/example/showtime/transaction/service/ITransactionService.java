@@ -10,4 +10,6 @@ public interface ITransactionService {
     String generateUniqueIdForTransaction(String prefix);
 
     CheckTransactionStatusResponse checkStatus(CheckTransactionStatusRequest checkTransactionStatusRequest);
+
+    TransactionItem getTransactionByUserEmailAndTransactionRefNo(String email, String transactionRefNo);
 }

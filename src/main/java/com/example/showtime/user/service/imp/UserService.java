@@ -63,6 +63,12 @@ public class UserService implements IUserService {
         return userRepository.findAll();
     }
 
+    @Override
+    public UserAccount getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+    }
+
     private void validateRequest(SignUpRequest signUpRequest) {
         if (Objects.isNull(signUpRequest) ||
                 StringUtils.isEmpty(signUpRequest.getEmail()) ||

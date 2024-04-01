@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface TransactionRepository extends JpaRepository<TransactionItem, Long> {
 
     TransactionItem findByTransactionRefNo(String transactionRefNo);
+
+    TransactionItem findByUserEmailAndTransactionRefNo(String email, String transactionRefNo);
 }

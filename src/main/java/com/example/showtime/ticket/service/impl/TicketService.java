@@ -2,6 +2,7 @@ package com.example.showtime.ticket.service.impl;
 
 import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.common.pdf.PdfGenerator;
+import com.example.showtime.email.service.IEmailService;
 import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.services.IEventService;
 import com.example.showtime.ticket.model.entity.Category;
@@ -18,6 +19,7 @@ import com.example.showtime.transaction.service.ITransactionService;
 import com.example.showtime.transaction.ssl.SSLTransactionInitiator;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.repository.UserRepository;
+import com.example.showtime.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
@@ -40,13 +42,12 @@ import java.util.stream.IntStream;
 public class TicketService implements ITicketService {
 
     private final TicketRepository ticketRepository;
-    private final UserRepository userRepository;
+    private final IUserService userService;
     private final IEventService eventService;
     private final ICategoryService categoryService;
     private final ITransactionService transactionService;
     private final SSLTransactionInitiator sslTransactionInitiator;
-
-    PdfGenerator pdfGenerator = new PdfGenerator();
+    private final PdfGenerator pdfGenerator;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -54,8 +55,7 @@ public class TicketService implements ITicketService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String createdByUserEmail = authentication.getName();
 
-        UserAccount createdBy = userRepository.findByEmail(createdByUserEmail)
-                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+        UserAccount createdBy = userService.getUserByEmail(createdByUserEmail);
 
         try {
             validateRequest(buyTicketRequest);
@@ -84,6 +84,7 @@ public class TicketService implements ITicketService {
                 .mapToObj(i -> {
                     Ticket ticket = new Ticket();
                     ticket.setTicketQrCode(generateQRCode(selectedEvent));
+                    ticket.setEventName(selectedEvent.getEventName());
                     ticket.setUsed(false);
                     ticket.setActive(true);
                     ticket.setTicketTransactionId(refId);
@@ -96,10 +97,9 @@ public class TicketService implements ITicketService {
                     ticket.setTicketOwnerNumber(ticketOwnerInformation.get(i).getTicketOwnerNumber());
                     ticket.setTicketCreatedBy(createdBy.getEmail());
                     ticket.setTicketPrice(categoryService.getTicketPrice(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId()));
+                    ticket.setTicketFilePath(generateTicketPdf(createdBy, ticket));
                     eventService.updateAvailableTickets(selectedEvent.getEventId());
                     categoryService.updateAvailableTickets(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId());
-
-                    generateTicketPdf(createdBy, ticket);
 
                     return ticket;
                 })
@@ -120,8 +120,8 @@ public class TicketService implements ITicketService {
     }
 
     @Async
-    public void generateTicketPdf(UserAccount createdBy, Ticket ticket) {
-        pdfGenerator.generateTicketPdf(createdBy, ticket);
+    public String generateTicketPdf(UserAccount createdBy, Ticket ticket) {
+        return pdfGenerator.generateTicketPdf(createdBy, ticket);
     }
 
     private void validateRequest(BuyTicketRequest buyTicketRequest) {
@@ -175,6 +175,11 @@ public class TicketService implements ITicketService {
     @Override
     public List<Ticket> getTicketsByEventId(String eventId) {
         return ticketRepository.findByEventId(eventId);
+    }
+
+    @Override
+    public List<Ticket> getTicketListByTransactionRefNo(String transactionRefNo) {
+        return ticketRepository.findByTicketTransactionId(transactionRefNo);
     }
 
     private String generateQRCode(Event event) {
