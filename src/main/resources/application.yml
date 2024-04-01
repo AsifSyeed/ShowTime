@@ -20,3 +20,14 @@ sslcommerz:
 spring:
   profiles:
     active: dev
+
+  mail:
+    host: gmail.com
+    port: 587
+    username:
+    password:
+    properties:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
