@@ -21,8 +21,8 @@ public class TransactionItem {
     @Column(name = "EVENT_ID")
     private String eventId;
 
-    @Column(name = "USER_ID")
-    private String userId;
+    @Column(name = "USER_EMAIL")
+    private String userEmail;
 
     @Column(name = "TOTAL_AMOUNT")
     private Double totalAmount;

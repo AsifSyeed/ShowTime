@@ -2,7 +2,6 @@ package com.example.showtime.ticket.service.impl;
 
 import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.common.pdf.PdfGenerator;
-import com.example.showtime.email.service.IEmailService;
 import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.services.IEventService;
 import com.example.showtime.ticket.model.entity.Category;
@@ -18,7 +17,6 @@ import com.example.showtime.transaction.model.entity.TransactionItem;
 import com.example.showtime.transaction.service.ITransactionService;
 import com.example.showtime.transaction.ssl.SSLTransactionInitiator;
 import com.example.showtime.user.model.entity.UserAccount;
-import com.example.showtime.user.repository.UserRepository;
 import com.example.showtime.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -111,7 +109,7 @@ public class TicketService implements ITicketService {
         transactionItem.setEventId(selectedEvent.getEventId());
         transactionItem.setTransactionDate(Calendar.getInstance().getTime());
         transactionItem.setTransactionStatus(TransactionStatusEnum.INITIATED.getValue());
-        transactionItem.setUserId(createdBy.getEmail());
+        transactionItem.setUserEmail(createdBy.getEmail());
 
         transactionService.saveTransaction(transactionItem);
 
