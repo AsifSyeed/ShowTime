@@ -4,13 +4,12 @@ import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.email.service.IEmailService;
 import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.ticket.service.ITicketService;
+import com.example.showtime.transaction.enums.TransactionStatusEnum;
 import com.example.showtime.transaction.model.entity.TransactionItem;
-import com.example.showtime.transaction.model.request.CheckTransactionStatusRequest;
 import com.example.showtime.transaction.service.ITransactionService;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -23,7 +22,6 @@ import org.springframework.stereotype.Service;
 import javax.mail.internet.MimeMessage;
 import java.io.File;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -38,9 +36,9 @@ public class EmailService implements IEmailService {
     private final ITicketService ticketService;
 
     @Override
-    public void sendTicketConfirmationMail(CheckTransactionStatusRequest checkTransactionStatusRequest) {
+    public void sendTicketConfirmationMail(String transactionRefNo) {
 
-        String transactionRefNo = validateRequest(checkTransactionStatusRequest);
+        validateRequest(transactionRefNo);
 
         try {
             List<Ticket> transactionTicketList = getTicketsByTransactionRefNo(transactionRefNo);
@@ -54,24 +52,22 @@ public class EmailService implements IEmailService {
         }
     }
 
-    private String validateRequest(CheckTransactionStatusRequest request) {
-
-        if (Objects.isNull(request) ||
-                StringUtils.isEmpty(request.getTransactionRefNo())) {
-
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Request body is not valid");
-        }
+    private void validateRequest(String transactionRefNo) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String createdByUserEmail = authentication.getName();
 
         UserAccount createdBy = userService.getUserByEmail(createdByUserEmail);
 
-        if (getTransaction(createdBy.getEmail(), request.getTransactionRefNo()) == null) {
+        TransactionItem transactionItem = getTransaction(createdBy.getEmail(), transactionRefNo);
+
+        if (transactionItem == null) {
             throw new BaseException(HttpStatus.NOT_FOUND.value(), "Transaction not found");
         }
 
-        return request.getTransactionRefNo();
+        if (transactionItem.getTransactionStatus() != TransactionStatusEnum.SUCCESS.getValue()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction is not successful");
+        }
     }
 
     private void sendPdf(Ticket ticket) {
@@ -105,6 +101,6 @@ public class EmailService implements IEmailService {
     }
 
     private TransactionItem getTransaction(String email, String transactionRefNo) {
-        return transactionService.getTransactionByUserEmailAndTransactionRefNo(email, transactionRefNo);
+        return transactionService.getTransactionByUserIdAndTransactionRefNo(email, transactionRefNo);
     }
 }

@@ -9,5 +9,5 @@ public interface TransactionRepository extends JpaRepository<TransactionItem, Lo
 
     TransactionItem findByTransactionRefNo(String transactionRefNo);
 
-    TransactionItem findByUserEmailAndTransactionRefNo(String email, String transactionRefNo);
+    TransactionItem findByUserIdAndTransactionRefNo(String email, String transactionRefNo);
 }

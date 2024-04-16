@@ -170,49 +170,40 @@ public class SSLCommerz {
      * @return
      * Returns a boolean value indicating a valid success response or not.
      * @throws IOException
-     * @throws NoSuchAlgorithmException
      */
-    boolean orderValidate(String merchantTrnxnId, String merchantTrnxnAmount, String merchantTrnxnCurrency,
-                          Map<String, String> requestParameters) throws IOException, NoSuchAlgorithmException {
-        boolean hash_verified = this.ipnHashVerify(requestParameters);
-        if (hash_verified) {
+    boolean orderValidate(String merchantTrnxnId, String merchantTrnxnAmount, String merchantTrnxnCurrency, String valId) throws IOException {
 
-            String EncodedValID = URLEncoder.encode(requestParameters.get("val_id"), Charset.forName("UTF-8").displayName());
-            String EncodedStoreID = URLEncoder.encode(this.storeId, Charset.forName("UTF-8").displayName());
-            String EncodedStorePassword = URLEncoder.encode(this.storePass, Charset.forName("UTF-8").displayName());
+        String EncodedValID = URLEncoder.encode(valId, Charset.forName("UTF-8").displayName());
+        String EncodedStoreID = URLEncoder.encode(this.storeId, Charset.forName("UTF-8").displayName());
+        String EncodedStorePassword = URLEncoder.encode(this.storePass, Charset.forName("UTF-8").displayName());
 
+        //GET Request
+        String validUrl = this.sslczURL + this.validationURL + "?val_id=" + EncodedValID
+                + "&store_id=" + EncodedStoreID + "&store_passwd=" + EncodedStorePassword + "&v=1&format=json";
+        String json = Util.getByOpeningJavaUrlConnection(validUrl);
 
-            //GET Request
-            String validUrl = this.sslczURL + this.validationURL + "?val_id=" + EncodedValID
-                    + "&store_id=" + EncodedStoreID + "&store_passwd=" + EncodedStorePassword + "&v=1&format=json";
-            String json = Util.getByOpeningJavaUrlConnection(validUrl);
+        if (!json.isEmpty()) {
+            SSLCommerzValidatorResponse resp = Util.extractValidatorResponse(json);//new JavaScriptSerializer().Deserialize < SSLCommerzValidatorResponse > (json);
 
-            if (!json.isEmpty()) {
-                SSLCommerzValidatorResponse resp = Util.extractValidatorResponse(json);//new JavaScriptSerializer().Deserialize < SSLCommerzValidatorResponse > (json);
+            if (resp.status.equals("VALID") || resp.status.equals("VALIDATED")) {
 
-                if (resp.status.equals("VALID") || resp.status.equals("VALIDATED")) {
-
-                    if (merchantTrnxnId.equals(resp.tran_id)
-                            && (Math.abs(Double.parseDouble(merchantTrnxnAmount) - Double.parseDouble(resp.currency_amount)) < 1)
-                            && merchantTrnxnCurrency.equals(resp.currency_type)) {
-                        return true;
-                    } else {
-                        this.error = "Currency Amount not matching";
-                        return false;
-                    }
-
+                if (merchantTrnxnId.equals(resp.tran_id)
+                        && (Math.abs(Double.parseDouble(merchantTrnxnAmount) - Double.parseDouble(resp.currency_amount)) < 1)
+                        && merchantTrnxnCurrency.equals(resp.currency_type)) {
+                    return true;
                 } else {
-                    this.error = "This transaction is either expired or failed";
+                    this.error = "Currency Amount not matching";
                     return false;
                 }
-            } else {
-                this.error = "Unable to get Transaction JSON status";
-                return false;
 
+            } else {
+                this.error = "This transaction is either expired or failed";
+                return false;
             }
         } else {
-            this.error = "Unable to verify hash";
+            this.error = "Unable to get Transaction JSON status";
             return false;
+
         }
     }
 

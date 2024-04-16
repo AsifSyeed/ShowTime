@@ -1,6 +1,7 @@
 package com.example.showtime.transaction.ssl;
 
 import com.example.showtime.transaction.model.entity.TransactionItem;
+import com.example.showtime.transaction.model.request.CheckTransactionStatusRequest;
 import com.example.showtime.transaction.ssl.Utility.ParameterBuilder;
 import com.example.showtime.user.model.entity.UserAccount;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +41,18 @@ public class SSLTransactionInitiator {
              * If user want to get URL as returned response, pass false.
              */
             response = sslcz.initiateTransaction(postData, false);
+            return response;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return response;
+    }
+
+    public boolean verifySSLTransaction(CheckTransactionStatusRequest checkTransactionStatusRequest) {
+        boolean response = false;
+        try {
+            SSLCommerz sslcz = new SSLCommerz(storeId, storePassword, storeTestMode);
+            response = sslcz.orderValidate(checkTransactionStatusRequest.getTransactionRefNo(), checkTransactionStatusRequest.getTransactionAmount(), checkTransactionStatusRequest.getTransactionCurrency(), checkTransactionStatusRequest.getValidationId());
             return response;
         } catch (Exception e) {
             e.printStackTrace();

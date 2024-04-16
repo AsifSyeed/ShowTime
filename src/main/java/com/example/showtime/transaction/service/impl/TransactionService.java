@@ -1,6 +1,7 @@
 package com.example.showtime.transaction.service.impl;
 
 import com.example.showtime.common.exception.BaseException;
+import com.example.showtime.transaction.enums.TransactionStatusEnum;
 import com.example.showtime.transaction.model.entity.TransactionItem;
 import com.example.showtime.transaction.model.request.CheckTransactionStatusRequest;
 import com.example.showtime.transaction.model.response.CheckTransactionStatusResponse;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class TransactionService implements ITransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final SSLTransactionInitiator sslTransactionInitiator;
 
     public void saveTransaction(TransactionItem transactionItem) {
         transactionRepository.save(transactionItem);
@@ -41,6 +43,13 @@ public class TransactionService implements ITransactionService {
         try {
             TransactionItem transactionItem = validateRequest(checkTransactionStatusRequest);
 
+            if (sslTransactionInitiator.verifySSLTransaction(checkTransactionStatusRequest)) {
+                updateTransactionStatus(transactionItem, TransactionStatusEnum.SUCCESS);
+
+            } else {
+                updateTransactionStatus(transactionItem, TransactionStatusEnum.FAILED);
+            }
+
             return CheckTransactionStatusResponse.builder()
                     .transactionRefNo(transactionItem.getTransactionRefNo())
                     .transactionStatus(transactionItem.getTransactionStatus())
@@ -52,14 +61,31 @@ public class TransactionService implements ITransactionService {
         }
     }
 
+    private void updateTransactionStatus(TransactionItem transactionItem, TransactionStatusEnum transactionStatus) {
+        transactionItem.setTransactionStatus(transactionStatus.getValue());
+        transactionRepository.save(transactionItem);
+    }
+
     @Override
-    public TransactionItem getTransactionByUserEmailAndTransactionRefNo(String email, String transactionRefNo) {
-        return transactionRepository.findByUserEmailAndTransactionRefNo(email, transactionRefNo);
+    public TransactionItem getTransactionByUserIdAndTransactionRefNo(String email, String transactionRefNo) {
+        return transactionRepository.findByUserIdAndTransactionRefNo(email, transactionRefNo);
     }
 
     private TransactionItem validateRequest(CheckTransactionStatusRequest checkTransactionStatusRequest) {
         if (checkTransactionStatusRequest.getTransactionRefNo() == null || checkTransactionStatusRequest.getTransactionRefNo().isEmpty()) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction ID is required");
+        }
+
+        if (checkTransactionStatusRequest.getValidationId() == null || checkTransactionStatusRequest.getValidationId().isEmpty()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Validation ID is required");
+        }
+
+        if (checkTransactionStatusRequest.getTransactionAmount() == null || checkTransactionStatusRequest.getTransactionAmount().isEmpty()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction Amount ID is required");
+        }
+
+        if (checkTransactionStatusRequest.getTransactionCurrency() == null || checkTransactionStatusRequest.getTransactionCurrency().isEmpty()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction Currency ID is required");
         }
 
         TransactionItem selectedTransaction = transactionRepository.findByTransactionRefNo(checkTransactionStatusRequest.getTransactionRefNo());

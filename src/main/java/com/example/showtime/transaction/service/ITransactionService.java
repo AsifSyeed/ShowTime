@@ -11,5 +11,5 @@ public interface ITransactionService {
 
     CheckTransactionStatusResponse checkStatus(CheckTransactionStatusRequest checkTransactionStatusRequest);
 
-    TransactionItem getTransactionByUserEmailAndTransactionRefNo(String email, String transactionRefNo);
+    TransactionItem getTransactionByUserIdAndTransactionRefNo(String email, String transactionRefNo);
 }
