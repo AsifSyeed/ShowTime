@@ -95,7 +95,6 @@ public class TicketService implements ITicketService {
                     ticket.setTicketOwnerNumber(ticketOwnerInformation.get(i).getTicketOwnerNumber());
                     ticket.setTicketCreatedBy(createdBy.getEmail());
                     ticket.setTicketPrice(categoryService.getTicketPrice(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId()));
-                    ticket.setTicketFilePath(generateTicketPdf(createdBy, ticket));
                     eventService.updateAvailableTickets(selectedEvent.getEventId());
                     categoryService.updateAvailableTickets(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId());
 
@@ -115,11 +114,6 @@ public class TicketService implements ITicketService {
 
         ticketRepository.saveAll(newTickets);
         return transactionItem;
-    }
-
-    @Async
-    public String generateTicketPdf(UserAccount createdBy, Ticket ticket) {
-        return pdfGenerator.generateTicketPdf(createdBy, ticket);
     }
 
     private void validateRequest(BuyTicketRequest buyTicketRequest) {

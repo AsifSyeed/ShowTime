@@ -2,7 +2,6 @@ package com.example.showtime.common.pdf;
 
 import com.example.showtime.common.qr.QRCodeGenerator;
 import com.example.showtime.ticket.model.entity.Ticket;
-import com.example.showtime.user.model.entity.UserAccount;
 import com.google.zxing.WriterException;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
@@ -16,36 +15,19 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.stereotype.Component;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Component
 @RequiredArgsConstructor
 public class PdfGenerator {
 
-    private static String OUTPUT_PATH = "";
-
-    public String generateTicketPdf(UserAccount createdBy, Ticket ticket) {
-        //add eventId from ticket to the template path
+    public byte[] generateTicketPdf(Ticket ticket) throws IOException {
         String TEMPLATE_PATH = "src/main/resources/assets/genericTickets/generic_ticket_" + ticket.getEventId() + ".pdf";
-        // Append ticket.eventName to the output path
-        String folderPath = "src/main/resources/assets/tickets/" + ticket.getEventId() + "/";
-        OUTPUT_PATH = folderPath + ticket.getTicketQrCode() + ".pdf";
 
-        // Create the folder if it doesn't exist
-        try {
-            Path directory = Paths.get(folderPath);
-            Files.createDirectories(directory);
-        } catch (IOException e) {
-            // Handle the exception, e.g., log it or throw a runtime exception
-            e.printStackTrace();
-        }
-
-        try {
-            PDDocument document = Loader.loadPDF(new File(TEMPLATE_PATH));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try (PDDocument document = Loader.loadPDF(new File(TEMPLATE_PATH))) {
             PDPage page = document.getPage(0);
 
             try (PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
@@ -65,11 +47,11 @@ public class PdfGenerator {
                 addImage(contentStream, document, qrCodeImage);
             }
 
-            saveAndCloseDocument(document);
-            return OUTPUT_PATH;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            // Instead of saving to a file, write to the ByteArrayOutputStream
+            document.save(outputStream);
         }
+
+        return outputStream.toByteArray();
     }
 
     private void setFontAndColor(PDPageContentStream contentStream) throws IOException {
@@ -87,10 +69,5 @@ public class PdfGenerator {
     private void addImage(PDPageContentStream contentStream, PDDocument document, BufferedImage image) throws IOException {
         PDImageXObject qrCodeImage = LosslessFactory.createFromImage(document, image);
         contentStream.drawImage(qrCodeImage, (float) 420, (float) 150);
-    }
-
-    private void saveAndCloseDocument(PDDocument document) throws IOException {
-        document.save(OUTPUT_PATH);
-        document.close();
     }
 }

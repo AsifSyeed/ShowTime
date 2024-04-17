@@ -66,8 +66,8 @@ public class TransactionService implements ITransactionService {
     }
 
     @Override
-    public TransactionItem getTransactionByUserIdAndTransactionRefNo(String email, String transactionRefNo) {
-        return transactionRepository.findByUserIdAndTransactionRefNo(email, transactionRefNo);
+    public TransactionItem getTransactionByUserEmailAndTransactionRefNo(String email, String transactionRefNo) {
+        return transactionRepository.findByUserEmailAndTransactionRefNo(email, transactionRefNo);
     }
 
     private TransactionItem validateRequest(CheckTransactionStatusRequest checkTransactionStatusRequest) {

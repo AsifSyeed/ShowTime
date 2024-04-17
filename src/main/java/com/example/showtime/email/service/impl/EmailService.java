@@ -1,6 +1,7 @@
 package com.example.showtime.email.service.impl;
 
 import com.example.showtime.common.exception.BaseException;
+import com.example.showtime.common.pdf.PdfGenerator;
 import com.example.showtime.email.service.IEmailService;
 import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.ticket.service.ITicketService;
@@ -20,6 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.mail.internet.MimeMessage;
+import javax.mail.util.ByteArrayDataSource;
 import java.io.File;
 import java.util.List;
 
@@ -34,6 +36,7 @@ public class EmailService implements IEmailService {
     private final IUserService userService;
     private final ITransactionService transactionService;
     private final ITicketService ticketService;
+    private final PdfGenerator pdfGenerator;
 
     @Override
     public void sendTicketConfirmationMail(String transactionRefNo) {
@@ -72,22 +75,27 @@ public class EmailService implements IEmailService {
 
     private void sendPdf(Ticket ticket) {
         try {
-            File file = new File(ticket.getTicketFilePath());
+            byte[] pdfBytes = pdfGenerator.generateTicketPdf(ticket);
 
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
             mimeMessageHelper.setFrom(from);
             mimeMessageHelper.setTo(ticket.getTicketOwnerEmail());
-            mimeMessageHelper.setSubject("Ticket for" + ticket.getEventName());
+            mimeMessageHelper.setSubject("Ticket for " + ticket.getEventName());
 
             // Set HTML content
-            String htmlContent = "<p style=\"font-size: 16px;\"><strong>Hello " + ticket.getTicketOwnerName() + ",<strong></p>"
-                    + "<p>Your ticket has been attached to this email. Please, check attached file.</p>"
+            String htmlContent = "<p style=\"font-size: 16px;\"><strong>Hello " + ticket.getTicketOwnerName() + ",</strong></p>"
+                    + "<p>Your ticket has been attached to this email. Please check the attached file.</p>"
                     + "<p>Regards,<br/>Relevant Bangladesh</p>";
 
             mimeMessageHelper.setText(htmlContent, true);
 
-            mimeMessageHelper.addAttachment(file.getName(), file);
+            // Create a DataSource from PDF byte array
+            ByteArrayDataSource dataSource = new ByteArrayDataSource(pdfBytes, "application/pdf");
+
+            // Use the QR code as part of the filename, for uniqueness
+            String filename = ticket.getTicketQrCode() + "-" + ticket.getTicketOwnerName() + ".pdf";
+            mimeMessageHelper.addAttachment(filename, dataSource);
 
             javaMailSender.send(mimeMessage);
 
@@ -96,11 +104,12 @@ public class EmailService implements IEmailService {
         }
     }
 
+
     private List<Ticket> getTicketsByTransactionRefNo(String transactionRefNo) {
         return ticketService.getTicketListByTransactionRefNo(transactionRefNo);
     }
 
     private TransactionItem getTransaction(String email, String transactionRefNo) {
-        return transactionService.getTransactionByUserIdAndTransactionRefNo(email, transactionRefNo);
+        return transactionService.getTransactionByUserEmailAndTransactionRefNo(email, transactionRefNo);
     }
 }
