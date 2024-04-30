@@ -44,6 +44,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             "/api/v1/user/signup",
             "/api/v1/auth/token",
             "/api/v1/auth/admin/token",
+            "/api/v1/transaction/ssl-redirect",
             "/v3/api-docs",
             "/v2/api-docs",
             "/swagger-resources/**",

@@ -43,12 +43,6 @@ public class TransactionService implements ITransactionService {
         try {
             TransactionItem transactionItem = validateRequest(checkTransactionStatusRequest);
 
-            if (sslTransactionInitiator.verifySSLTransaction(checkTransactionStatusRequest)) {
-                updateTransactionStatus(transactionItem, TransactionStatusEnum.SUCCESS);
-            } else {
-                updateTransactionStatus(transactionItem, TransactionStatusEnum.FAILED);
-            }
-
             return CheckTransactionStatusResponse.builder()
                     .transactionRefNo(transactionItem.getTransactionRefNo())
                     .transactionStatus(transactionItem.getTransactionStatus())
@@ -70,21 +64,42 @@ public class TransactionService implements ITransactionService {
         return transactionRepository.findByUserEmailAndTransactionRefNo(email, transactionRefNo);
     }
 
-    private TransactionItem validateRequest(CheckTransactionStatusRequest checkTransactionStatusRequest) {
-        if (checkTransactionStatusRequest.getTransactionRefNo() == null || checkTransactionStatusRequest.getTransactionRefNo().isEmpty()) {
+    @Override
+    public void sslTransactionUpdate(String transactionRefNo, String validationId, String amount, String currency) {
+        if (transactionRefNo == null || transactionRefNo.isEmpty()) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction ID is required");
         }
 
-        if (checkTransactionStatusRequest.getValidationId() == null || checkTransactionStatusRequest.getValidationId().isEmpty()) {
+        if (validationId == null || validationId.isEmpty()) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Validation ID is required");
         }
 
-        if (checkTransactionStatusRequest.getTransactionAmount() == null || checkTransactionStatusRequest.getTransactionAmount().isEmpty()) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction Amount ID is required");
+        if (amount == null || amount.isEmpty()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Amount is required");
         }
 
-        if (checkTransactionStatusRequest.getTransactionCurrency() == null || checkTransactionStatusRequest.getTransactionCurrency().isEmpty()) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction Currency ID is required");
+        if (currency == null || currency.isEmpty()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Currency is required");
+        }
+
+        TransactionItem selectedTransaction = transactionRepository.findByTransactionRefNo(transactionRefNo);
+
+        if (selectedTransaction == null) {
+            throw new BaseException(HttpStatus.NOT_FOUND.value(), "Transaction not found");
+        }
+
+        boolean sslStatus = sslTransactionInitiator.verifySSLTransaction(transactionRefNo, validationId, amount, currency);
+
+        if (sslStatus) {
+            updateTransactionStatus(selectedTransaction, TransactionStatusEnum.SUCCESS);
+        } else {
+            updateTransactionStatus(selectedTransaction, TransactionStatusEnum.FAILED);
+        }
+    }
+
+    private TransactionItem validateRequest(CheckTransactionStatusRequest checkTransactionStatusRequest) {
+        if (checkTransactionStatusRequest.getTransactionRefNo() == null || checkTransactionStatusRequest.getTransactionRefNo().isEmpty()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction ID is required");
         }
 
         TransactionItem selectedTransaction = transactionRepository.findByTransactionRefNo(checkTransactionStatusRequest.getTransactionRefNo());

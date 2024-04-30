@@ -48,11 +48,11 @@ public class SSLTransactionInitiator {
         return response;
     }
 
-    public boolean verifySSLTransaction(CheckTransactionStatusRequest checkTransactionStatusRequest) {
+    public boolean verifySSLTransaction(String transactionRefNo, String validationId, String transactionAmount, String transactionCurrency) {
         boolean response = false;
         try {
             SSLCommerz sslcz = new SSLCommerz(storeId, storePassword, storeTestMode);
-            response = sslcz.orderValidate(checkTransactionStatusRequest.getTransactionRefNo(), checkTransactionStatusRequest.getTransactionAmount(), checkTransactionStatusRequest.getTransactionCurrency(), checkTransactionStatusRequest.getValidationId());
+            response = sslcz.orderValidate(transactionRefNo, transactionAmount, transactionCurrency, validationId);
             return response;
         } catch (Exception e) {
             e.printStackTrace();

@@ -8,10 +8,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
+import java.net.URI;
 
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001", "https://www.countersbd.com"}, maxAge = 3600)
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/transaction")
@@ -23,5 +25,16 @@ public class TransactionController {
         ApiResponse<CheckTransactionStatusResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Operation successful", transactionService.checkStatus(checkTransactionStatusRequest));
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/ssl-redirect")
+    public ResponseEntity<ApiResponse<?>> sslRedirect(@RequestParam String val_id, String tran_id, String amount, String bank_tran_id, String currency) {
+
+        transactionService.sslTransactionUpdate(tran_id, val_id, amount, currency);
+
+        String frontendUrl = "http://localhost:3000/checkout/validate?&tran_id=" + tran_id;
+        URI redirectUri = ServletUriComponentsBuilder.fromUriString(frontendUrl).build().toUri();
+
+        return ResponseEntity.status(HttpStatus.FOUND).location(redirectUri).build();
     }
 }

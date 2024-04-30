@@ -12,4 +12,6 @@ public interface ITransactionService {
     CheckTransactionStatusResponse checkStatus(CheckTransactionStatusRequest checkTransactionStatusRequest);
 
     TransactionItem getTransactionByUserEmailAndTransactionRefNo(String email, String transactionRefNo);
+
+    void sslTransactionUpdate(String transactionRefNo, String validationId, String amount, String currency);
 }
