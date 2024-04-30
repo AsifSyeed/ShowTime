@@ -4,6 +4,7 @@ import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.ticket.model.request.BuyTicketRequest;
 import com.example.showtime.ticket.model.response.BuyTicketResponse;
+import com.example.showtime.ticket.model.response.MyTicketResponse;
 
 import java.util.List;
 
@@ -15,4 +16,6 @@ public interface ITicketService {
     List<Ticket> getTicketsByEventId(String eventId);
 
     List<Ticket> getTicketListByTransactionRefNo(String transactionRefNo);
+
+    List<MyTicketResponse> getMyTickets();
 }

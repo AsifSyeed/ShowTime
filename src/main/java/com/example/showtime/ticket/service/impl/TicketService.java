@@ -9,6 +9,7 @@ import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.ticket.model.request.BuyTicketRequest;
 import com.example.showtime.ticket.model.request.TicketOwnerInformationRequest;
 import com.example.showtime.ticket.model.response.BuyTicketResponse;
+import com.example.showtime.ticket.model.response.MyTicketResponse;
 import com.example.showtime.ticket.repository.TicketRepository;
 import com.example.showtime.ticket.service.ICategoryService;
 import com.example.showtime.ticket.service.ITicketService;
@@ -21,7 +22,6 @@ import com.example.showtime.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -172,6 +172,32 @@ public class TicketService implements ITicketService {
     @Override
     public List<Ticket> getTicketListByTransactionRefNo(String transactionRefNo) {
         return ticketRepository.findByTicketTransactionId(transactionRefNo);
+    }
+
+    @Override
+    public List<MyTicketResponse> getMyTickets() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String createdByUserEmail = authentication.getName();
+
+        UserAccount createdBy = userService.getUserByEmail(createdByUserEmail);
+
+        try {
+            return ticketRepository.findByTicketCreatedBy(createdBy.getEmail()).stream()
+                    .map(ticket -> MyTicketResponse.builder()
+                            .ticketId(ticket.getTicketQrCode())
+                            .eventName(ticket.getEventName())
+                            .ticketOwnerName(ticket.getTicketOwnerName())
+                            .ticketOwnerEmail(ticket.getTicketOwnerEmail())
+                            .ticketOwnerNumber(ticket.getTicketOwnerNumber())
+                            .ticketCategoryName(categoryService.getCategoryByIdAndEventId(ticket.getTicketCategory(), ticket.getEventId()).getCategoryName())
+                            .ticketPrice(String.valueOf(ticket.getTicketPrice()))
+                            .ticketStatus(ticket.isUsed())
+                            .validityDate(String.valueOf(ticket.getValidityDate()))
+                            .build())
+                    .collect(Collectors.toList());
+        } catch (AccessDeniedException e) {
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
+        }
     }
 
     private String generateQRCode(Event event) {
