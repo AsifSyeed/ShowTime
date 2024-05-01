@@ -24,7 +24,7 @@ import java.io.IOException;
 public class PdfGenerator {
 
     public byte[] generateTicketPdf(Ticket ticket) throws IOException {
-        String TEMPLATE_PATH = "src/main/resources/assets/genericTickets/generic_ticket_" + ticket.getEventId() + ".pdf";
+        String TEMPLATE_PATH = "assets/genericTickets/generic_ticket_" + ticket.getEventId() + ".pdf";
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try (PDDocument document = Loader.loadPDF(new File(TEMPLATE_PATH))) {

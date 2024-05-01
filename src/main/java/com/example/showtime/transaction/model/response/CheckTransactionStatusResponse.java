@@ -11,4 +11,6 @@ public class CheckTransactionStatusResponse {
     private String transactionRefNo;
     private int transactionStatus;
     private double totalAmount;
+    private int numberOfTickets;
+    private String eventName;
 }

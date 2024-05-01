@@ -32,4 +32,7 @@ public class TransactionItem {
 
     @Column(name = "TRANSACTION_STATUS")
     private int transactionStatus;
+
+    @Column(name = "NUMBER_OF_TICKETS")
+    private int numberOfTickets;
 }

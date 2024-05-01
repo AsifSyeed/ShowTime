@@ -109,6 +109,7 @@ public class TicketService implements ITicketService {
         transactionItem.setTransactionDate(Calendar.getInstance().getTime());
         transactionItem.setTransactionStatus(TransactionStatusEnum.INITIATED.getValue());
         transactionItem.setUserEmail(createdBy.getEmail());
+        transactionItem.setNumberOfTickets(newTickets.size());
 
         transactionService.saveTransaction(transactionItem);
 

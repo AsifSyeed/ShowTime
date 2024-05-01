@@ -42,13 +42,13 @@ public class ParameterBuilder {
     public static Map<String, String> constructRequestParameters(TransactionItem transactionItem, UserAccount createdBy) {
 
         // CREATING LIST OF POST DATA
-        String baseUrl = "http://localhost:8080/";//Request.Url.Scheme + "://" + Request.Url.Authority + Request.ApplicationPath.TrimEnd('/') + "/";
+        String baseUrl = "https://api.countersbd.com/";//Request.Url.Scheme + "://" + Request.Url.Authority + Request.ApplicationPath.TrimEnd('/') + "/";
         Map<String, String> postData = new HashMap<String, String>();
         postData.put("total_amount", transactionItem.getTotalAmount().toString());
         postData.put("tran_id", transactionItem.getTransactionRefNo()); // use unique tran_id for each API call
         postData.put("success_url", baseUrl + "api/v1/transaction/ssl-redirect");
-        postData.put("fail_url", "https://sandbox.sslcommerz.com/developer/fail.php");
-        postData.put("cancel_url", "https://sandbox.sslcommerz.com/developer/cancel.php");
+        postData.put("fail_url", baseUrl + "api/v1/transaction/ssl-redirect");
+        postData.put("cancel_url", baseUrl + "api/v1/transaction/ssl-redirect");
         postData.put("cus_name", createdBy.getUserFullName());
         postData.put("cus_email", createdBy.getEmail());
         postData.put("cus_add1", "Address Line One");

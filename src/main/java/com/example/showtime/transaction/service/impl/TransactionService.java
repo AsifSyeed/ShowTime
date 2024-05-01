@@ -1,6 +1,8 @@
 package com.example.showtime.transaction.service.impl;
 
 import com.example.showtime.common.exception.BaseException;
+import com.example.showtime.event.services.IEventService;
+import com.example.showtime.ticket.service.ITicketService;
 import com.example.showtime.transaction.enums.TransactionStatusEnum;
 import com.example.showtime.transaction.model.entity.TransactionItem;
 import com.example.showtime.transaction.model.request.CheckTransactionStatusRequest;
@@ -24,6 +26,7 @@ public class TransactionService implements ITransactionService {
 
     private final TransactionRepository transactionRepository;
     private final SSLTransactionInitiator sslTransactionInitiator;
+    private final IEventService eventService;
 
     public void saveTransaction(TransactionItem transactionItem) {
         transactionRepository.save(transactionItem);
@@ -47,6 +50,8 @@ public class TransactionService implements ITransactionService {
                     .transactionRefNo(transactionItem.getTransactionRefNo())
                     .transactionStatus(transactionItem.getTransactionStatus())
                     .totalAmount(transactionItem.getTotalAmount())
+                    .eventName(eventService.getEventById(transactionItem.getEventId()).getEventName())
+                    .numberOfTickets(transactionItem.getNumberOfTickets())
                     .build();
 
         } catch (AccessDeniedException e) {
