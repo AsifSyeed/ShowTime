@@ -1,6 +1,5 @@
 package com.example.showtime.ticket.model.entity;
 
-import com.example.showtime.event.model.entity.Event;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,8 +16,8 @@ public class Ticket {
     @Column(name = "ID")
     private Long id;
 
-    @Column(name = "TICKET_QR_CODE", unique = true)
-    private String ticketQrCode;
+    @Column(name = "TICKET_ID", unique = true)
+    private String ticketId;
 
     @Column(name = "VALIDITY_DATE")
     private Date validityDate;
@@ -58,4 +57,7 @@ public class Ticket {
 
     @Column(name = "EVENT_NAME")
     private String eventName;
+
+    @Column(name = "TICKET_TRANSACTION_STATUS")
+    private int ticketTransactionStatus;
  }

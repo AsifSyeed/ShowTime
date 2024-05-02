@@ -9,6 +9,10 @@ RUN mvn clean install
 FROM openjdk:11
 WORKDIR /app
 COPY --from=build /app/target/ShowTime-0.0.1-SNAPSHOT.jar showTime.jar
+
+# Copy PDF files
+COPY src/main/resources/assets/genericTickets /app/src/main/resources/assets/genericTickets
+
 EXPOSE 8080
 CMD ["java", "-jar", "showTime.jar"]
 

@@ -39,13 +39,13 @@ public class ParameterBuilder {
                 : resultString;
     }
 
-    public static Map<String, String> constructRequestParameters(TransactionItem transactionItem, UserAccount createdBy) {
+    public static Map<String, String> constructRequestParameters(String transactionReferenceNo, Double totalPrice, UserAccount createdBy) {
 
         // CREATING LIST OF POST DATA
         String baseUrl = "https://api.countersbd.com/";//Request.Url.Scheme + "://" + Request.Url.Authority + Request.ApplicationPath.TrimEnd('/') + "/";
         Map<String, String> postData = new HashMap<String, String>();
-        postData.put("total_amount", transactionItem.getTotalAmount().toString());
-        postData.put("tran_id", transactionItem.getTransactionRefNo()); // use unique tran_id for each API call
+        postData.put("total_amount", totalPrice.toString());
+        postData.put("tran_id", transactionReferenceNo); // use unique tran_id for each API call
         postData.put("success_url", baseUrl + "api/v1/transaction/ssl-redirect");
         postData.put("fail_url", baseUrl + "api/v1/transaction/ssl-redirect");
         postData.put("cancel_url", baseUrl + "api/v1/transaction/ssl-redirect");

@@ -39,9 +39,9 @@ public class CategoryService implements ICategoryService {
     }
 
     @Override
-    public void updateAvailableTickets(Long categoryId, String eventId) {
+    public void updateAvailableTickets(Long categoryId, String eventId, long size) {
         Category category = getCategoryByIdAndEventId(categoryId, eventId);
-        category.setCategoryAvailableCount(category.getCategoryAvailableCount() - 1);
+        category.setCategoryAvailableCount(category.getCategoryAvailableCount() - size);
         categoryRepository.save(category);
     }
 

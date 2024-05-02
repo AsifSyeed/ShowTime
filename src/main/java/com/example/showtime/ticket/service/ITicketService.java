@@ -17,4 +17,6 @@ public interface ITicketService {
     List<Ticket> getTicketListByTransactionRefNo(String transactionRefNo);
 
     List<MyTicketResponse> getMyTickets();
+
+    void updateTicketStatus(List<Ticket> selectedTickets, int transactionStatus);
 }

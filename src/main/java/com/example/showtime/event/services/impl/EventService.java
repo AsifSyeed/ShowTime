@@ -8,12 +8,9 @@ import com.example.showtime.event.model.request.EventRequest;
 import com.example.showtime.event.model.response.EventResponse;
 import com.example.showtime.event.repository.EventRepository;
 import com.example.showtime.event.services.IEventService;
-import com.example.showtime.ticket.model.entity.Category;
 import com.example.showtime.ticket.model.request.CategoryRequest;
 import com.example.showtime.ticket.service.ICategoryService;
 import com.example.showtime.user.enums.UserRole;
-import com.example.showtime.user.model.entity.UserAccount;
-import com.example.showtime.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
@@ -85,9 +82,11 @@ public class EventService implements IEventService {
     }
 
     @Override
-    public void updateAvailableTickets(String eventId) {
+    public void updateAvailableTickets(String eventId, long categoryId, long size) {
         Event event = getEventById(eventId);
-        event.setEventAvailableCount(event.getEventAvailableCount() - 1);
+        event.setEventAvailableCount(event.getEventAvailableCount() - size);
+        categoryService.updateAvailableTickets(categoryId, eventId, size);
+
         eventRepository.save(event);
     }
 

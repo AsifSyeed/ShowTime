@@ -5,13 +5,10 @@ import com.example.showtime.transaction.model.request.CheckTransactionStatusRequ
 import com.example.showtime.transaction.model.response.CheckTransactionStatusResponse;
 
 public interface ITransactionService {
-    void saveTransaction(TransactionItem transactionItem);
-
-    String generateUniqueIdForTransaction(String prefix);
 
     CheckTransactionStatusResponse checkStatus(CheckTransactionStatusRequest checkTransactionStatusRequest);
 
     TransactionItem getTransactionByUserEmailAndTransactionRefNo(String email, String transactionRefNo);
 
-    void sslTransactionUpdate(String transactionRefNo, String validationId, String amount, String currency);
+    void sslTransactionUpdate(String transactionRefNo, String validationId, String amount, String currency, String status);
 }

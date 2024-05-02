@@ -1,7 +1,7 @@
 package com.example.showtime.ticket.service.impl;
 
 import com.example.showtime.common.exception.BaseException;
-import com.example.showtime.common.pdf.PdfGenerator;
+import com.example.showtime.common.uniqueId.UniqueIdGenerator;
 import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.services.IEventService;
 import com.example.showtime.ticket.model.entity.Category;
@@ -14,13 +14,13 @@ import com.example.showtime.ticket.repository.TicketRepository;
 import com.example.showtime.ticket.service.ICategoryService;
 import com.example.showtime.ticket.service.ITicketService;
 import com.example.showtime.transaction.enums.TransactionStatusEnum;
-import com.example.showtime.transaction.model.entity.TransactionItem;
-import com.example.showtime.transaction.service.ITransactionService;
 import com.example.showtime.transaction.ssl.SSLTransactionInitiator;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -43,9 +43,10 @@ public class TicketService implements ITicketService {
     private final IUserService userService;
     private final IEventService eventService;
     private final ICategoryService categoryService;
-    private final ITransactionService transactionService;
     private final SSLTransactionInitiator sslTransactionInitiator;
-    private final PdfGenerator pdfGenerator;
+
+    @Value("${node.id}")
+    private Long nodeId;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -58,11 +59,13 @@ public class TicketService implements ITicketService {
         try {
             validateRequest(buyTicketRequest);
 
-            TransactionItem transactionItem = prepareTicketModel(buyTicketRequest, createdBy);
-            String sslCommerzPaymentUrl = sslTransactionInitiator.initiateSSLTransaction(transactionItem, createdBy);
+            Pair<String, Double> result = prepareTicketModel(buyTicketRequest, createdBy);
+            String transactionRef = result.getFirst();
+            Double totalPrice = result.getSecond();
+            String sslCommerzPaymentUrl = sslTransactionInitiator.initiateSSLTransaction(transactionRef, totalPrice, createdBy);
 
             return BuyTicketResponse.builder()
-                    .transactionRefNo(transactionItem.getTransactionRefNo())
+                    .transactionRefNo(transactionRef)
                     .sslPaymentUrl(sslCommerzPaymentUrl)
                     .build();
         } catch (AccessDeniedException e) {
@@ -70,19 +73,23 @@ public class TicketService implements ITicketService {
         }
     }
 
-    private TransactionItem prepareTicketModel(BuyTicketRequest buyTicketRequest, UserAccount createdBy) {
+    private Pair<String, Double> prepareTicketModel(BuyTicketRequest buyTicketRequest, UserAccount createdBy) {
         List<Ticket> newTickets;
 
         Event selectedEvent = eventService.getEventById(buyTicketRequest.getEventId());
         List<TicketOwnerInformationRequest> ticketOwnerInformation = buyTicketRequest.getTicketOwnerInformation();
-        String refId = transactionService.generateUniqueIdForTransaction(selectedEvent.getEventId().substring(0, 2));
+
+        UniqueIdGenerator uniqueIdGenerator = new UniqueIdGenerator(nodeId);
+
+        String refId = uniqueIdGenerator.generateUniqueTransactionReferenceNo(selectedEvent.getEventId().substring(0, 2));
 
         newTickets = IntStream.range(0, Math.toIntExact(ticketOwnerInformation.size()))
                 .parallel()
                 .mapToObj(i -> {
                     Ticket ticket = new Ticket();
-                    ticket.setTicketQrCode(generateQRCode(selectedEvent));
+                    ticket.setTicketId(uniqueIdGenerator.generateUniqueId(selectedEvent.getEventId()));
                     ticket.setEventName(selectedEvent.getEventName());
+                    ticket.setTicketTransactionStatus(TransactionStatusEnum.INITIATED.getValue());
                     ticket.setUsed(false);
                     ticket.setActive(true);
                     ticket.setTicketTransactionId(refId);
@@ -95,26 +102,15 @@ public class TicketService implements ITicketService {
                     ticket.setTicketOwnerNumber(ticketOwnerInformation.get(i).getTicketOwnerNumber());
                     ticket.setTicketCreatedBy(createdBy.getEmail());
                     ticket.setTicketPrice(categoryService.getTicketPrice(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId()));
-                    eventService.updateAvailableTickets(selectedEvent.getEventId());
-                    categoryService.updateAvailableTickets(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId());
 
                     return ticket;
                 })
                 .collect(Collectors.toList());
 
-        TransactionItem transactionItem = new TransactionItem();
-        transactionItem.setTransactionRefNo(refId);
-        transactionItem.setTotalAmount(newTickets.stream().mapToDouble(Ticket::getTicketPrice).sum());
-        transactionItem.setEventId(selectedEvent.getEventId());
-        transactionItem.setTransactionDate(Calendar.getInstance().getTime());
-        transactionItem.setTransactionStatus(TransactionStatusEnum.INITIATED.getValue());
-        transactionItem.setUserEmail(createdBy.getEmail());
-        transactionItem.setNumberOfTickets(newTickets.size());
-
-        transactionService.saveTransaction(transactionItem);
+        eventService.updateAvailableTickets(selectedEvent.getEventId(), buyTicketRequest.getTicketCategory(), newTickets.size());
 
         ticketRepository.saveAll(newTickets);
-        return transactionItem;
+        return Pair.of(refId, newTickets.stream().mapToDouble(Ticket::getTicketPrice).sum());
     }
 
     private void validateRequest(BuyTicketRequest buyTicketRequest) {
@@ -185,7 +181,7 @@ public class TicketService implements ITicketService {
         try {
             return ticketRepository.findByTicketCreatedBy(createdBy.getEmail()).stream()
                     .map(ticket -> MyTicketResponse.builder()
-                            .ticketId(ticket.getTicketQrCode())
+                            .ticketId(ticket.getTicketId())
                             .eventName(ticket.getEventName())
                             .ticketOwnerName(ticket.getTicketOwnerName())
                             .ticketOwnerEmail(ticket.getTicketOwnerEmail())
@@ -201,10 +197,15 @@ public class TicketService implements ITicketService {
         }
     }
 
-    private String generateQRCode(Event event) {
+    @Override
+    public void updateTicketStatus(List<Ticket> selectedTickets, int transactionStatus) {
+        if (transactionStatus != TransactionStatusEnum.SUCCESS.getValue()) {
+            eventService.updateAvailableTickets(selectedTickets.get(0).getEventId(), selectedTickets.get(0).getTicketCategory(), (-selectedTickets.size()));
+        }
 
-        List<Ticket> ticketsFromEvent = getTicketsByEventId(event.getEventId());
-
-        return event.getEventId() + event.getId() + (ticketsFromEvent.size() + 1); // Placeholder for the actual generation code
+        selectedTickets.forEach(ticket -> {
+            ticket.setTicketTransactionStatus(transactionStatus);
+            ticketRepository.save(ticket);
+        });
     }
 }

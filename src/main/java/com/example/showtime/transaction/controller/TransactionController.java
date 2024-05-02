@@ -28,11 +28,16 @@ public class TransactionController {
     }
 
     @PostMapping("/ssl-redirect")
-    public ResponseEntity<ApiResponse<?>> sslRedirect(@RequestParam String val_id, String tran_id, String amount, String bank_tran_id, String currency) {
+    public ResponseEntity<ApiResponse<?>> sslRedirect(@RequestParam String tran_id,
+                                                      @RequestParam(required = false) String val_id,
+                                                      @RequestParam(required = false) String amount,
+                                                      @RequestParam(required = false) String bank_tran_id,
+                                                      @RequestParam(required = false) String currency,
+                                                      @RequestParam(required = false) String status) {
 
-        transactionService.sslTransactionUpdate(tran_id, val_id, amount, currency);
+        transactionService.sslTransactionUpdate(tran_id, val_id, amount, currency, status);
 
-        String frontendUrl = "http://localhost:3000/checkout/validate?&tran_id=" + tran_id;
+        String frontendUrl = "https://api.countersbd.com/checkout/validate?&tran_id=" + tran_id;
         URI redirectUri = ServletUriComponentsBuilder.fromUriString(frontendUrl).build().toUri();
 
         return ResponseEntity.status(HttpStatus.FOUND).location(redirectUri).build();

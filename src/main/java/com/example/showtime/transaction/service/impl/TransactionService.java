@@ -2,6 +2,7 @@ package com.example.showtime.transaction.service.impl;
 
 import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.event.services.IEventService;
+import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.ticket.service.ITicketService;
 import com.example.showtime.transaction.enums.TransactionStatusEnum;
 import com.example.showtime.transaction.model.entity.TransactionItem;
@@ -11,14 +12,14 @@ import com.example.showtime.transaction.repository.TransactionRepository;
 import com.example.showtime.transaction.service.ITransactionService;
 import com.example.showtime.transaction.ssl.SSLTransactionInitiator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+import java.util.Calendar;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,18 +28,7 @@ public class TransactionService implements ITransactionService {
     private final TransactionRepository transactionRepository;
     private final SSLTransactionInitiator sslTransactionInitiator;
     private final IEventService eventService;
-
-    public void saveTransaction(TransactionItem transactionItem) {
-        transactionRepository.save(transactionItem);
-    }
-
-    @Value("${node.id}")
-    private Long nodeId;
-
-    @Override
-    public String generateUniqueIdForTransaction(String prefix) {
-        return generateUniqueId(prefix);
-    }
+    private final ITicketService ticketService;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -70,36 +60,43 @@ public class TransactionService implements ITransactionService {
     }
 
     @Override
-    public void sslTransactionUpdate(String transactionRefNo, String validationId, String amount, String currency) {
-        if (transactionRefNo == null || transactionRefNo.isEmpty()) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction ID is required");
-        }
+    public void sslTransactionUpdate(String transactionRefNo, String validationId, String amount, String currency, String status) {
+        boolean sslStatusFromRedirectUrl = status.equals("VALID");
 
-        if (validationId == null || validationId.isEmpty()) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Validation ID is required");
-        }
+        List<Ticket> tickets = ticketService.getTicketListByTransactionRefNo(transactionRefNo);
 
-        if (amount == null || amount.isEmpty()) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Amount is required");
-        }
+        if (sslStatusFromRedirectUrl) {
+            if (transactionRefNo == null || transactionRefNo.isEmpty()) {
+                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction ID is required");
+            }
 
-        if (currency == null || currency.isEmpty()) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Currency is required");
-        }
+            if (currency == null || currency.isEmpty()) {
+                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Currency is required");
+            }
 
-        TransactionItem selectedTransaction = transactionRepository.findByTransactionRefNo(transactionRefNo);
+            boolean sslStatus = sslTransactionInitiator.verifySSLTransaction(transactionRefNo, validationId, amount, currency);
 
-        if (selectedTransaction == null) {
-            throw new BaseException(HttpStatus.NOT_FOUND.value(), "Transaction not found");
-        }
+            if (sslStatus) {
+                TransactionItem transactionItem = new TransactionItem();
+                transactionItem.setTransactionRefNo(transactionRefNo);
+                transactionItem.setTotalAmount(Double.valueOf(amount));
+                transactionItem.setEventId(tickets.get(0).getEventId());
+                transactionItem.setTransactionDate(Calendar.getInstance().getTime());
+                transactionItem.setTransactionStatus(TransactionStatusEnum.SUCCESS.getValue());
+                transactionItem.setUserEmail(tickets.get(0).getTicketCreatedBy());
+                transactionItem.setNumberOfTickets(tickets.size());
 
-        boolean sslStatus = sslTransactionInitiator.verifySSLTransaction(transactionRefNo, validationId, amount, currency);
+                transactionRepository.save(transactionItem);
 
-        if (sslStatus) {
-            updateTransactionStatus(selectedTransaction, TransactionStatusEnum.SUCCESS);
+                updateTicketsStatus(tickets, TransactionStatusEnum.SUCCESS.getValue());
+            }
         } else {
-            updateTransactionStatus(selectedTransaction, TransactionStatusEnum.FAILED);
+            updateTicketsStatus(tickets, TransactionStatusEnum.FAILED.getValue());
         }
+    }
+
+    private void updateTicketsStatus(List<Ticket> tickets, int transactionStatus) {
+        ticketService.updateTicketStatus(tickets, transactionStatus);
     }
 
     private TransactionItem validateRequest(CheckTransactionStatusRequest checkTransactionStatusRequest) {
@@ -114,12 +111,5 @@ public class TransactionService implements ITransactionService {
         }
 
         return selectedTransaction;
-    }
-
-    public String generateUniqueId(String prefix) {
-        long timestamp = System.currentTimeMillis();
-        long nodeIdMod = timestamp % Long.parseLong(String.valueOf(nodeId)); // Mod nodeId with current milliseconds
-
-        return (prefix + nodeIdMod + "-" + UUID.randomUUID()).toLowerCase(); // Combine prefix, nodeIdMod, and UUID
     }
 }

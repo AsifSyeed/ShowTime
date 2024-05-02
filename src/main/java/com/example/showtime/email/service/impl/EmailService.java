@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.ByteArrayDataSource;
-import java.io.File;
 import java.util.List;
 
 @Service
@@ -94,7 +93,7 @@ public class EmailService implements IEmailService {
             ByteArrayDataSource dataSource = new ByteArrayDataSource(pdfBytes, "application/pdf");
 
             // Use the QR code as part of the filename, for uniqueness
-            String filename = ticket.getTicketQrCode() + "-" + ticket.getTicketOwnerName() + ".pdf";
+            String filename = ticket.getTicketId() + "-" + ticket.getTicketOwnerName() + ".pdf";
             mimeMessageHelper.addAttachment(filename, dataSource);
 
             javaMailSender.send(mimeMessage);
