@@ -37,7 +37,7 @@ public class TransactionController {
 
         transactionService.sslTransactionUpdate(tran_id, val_id, amount, currency, status);
 
-        String frontendUrl = "https://api.countersbd.com/checkout/validate?&tran_id=" + tran_id;
+        String frontendUrl = "https://countersbd.com/checkout/validate?&tran_id=" + tran_id;
         URI redirectUri = ServletUriComponentsBuilder.fromUriString(frontendUrl).build().toUri();
 
         return ResponseEntity.status(HttpStatus.FOUND).location(redirectUri).build();
