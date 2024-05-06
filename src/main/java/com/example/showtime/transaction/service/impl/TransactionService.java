@@ -69,6 +69,10 @@ public class TransactionService implements ITransactionService {
         boolean sslStatus = sslTransactionInitiator.verifySSLTransaction(transactionRefNo, validationId, amount, currency);
         List<Ticket> tickets = ticketService.getTicketListByTransactionRefNo(transactionRefNo);
 
+        if (tickets.isEmpty()) {
+            throw new BaseException(HttpStatus.NOT_FOUND.value(), "Invalid transaction ID");
+        }
+
         TransactionItem transactionItem = new TransactionItem();
         transactionItem.setTransactionRefNo(transactionRefNo);
         transactionItem.setTotalAmount(Double.valueOf(amount));
