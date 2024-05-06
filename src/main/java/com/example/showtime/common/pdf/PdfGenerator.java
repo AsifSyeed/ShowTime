@@ -1,6 +1,8 @@
 package com.example.showtime.common.pdf;
 
 import com.example.showtime.common.qr.QRCodeGenerator;
+import com.example.showtime.s3.config.StorageConfig;
+import com.example.showtime.s3.service.StorageService;
 import com.example.showtime.ticket.model.entity.Ticket;
 import com.google.zxing.WriterException;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +25,16 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class PdfGenerator {
 
+    private final StorageService storageService;
     public byte[] generateTicketPdf(Ticket ticket) throws IOException {
-        String TEMPLATE_PATH = "src/main/resources/assets/genericTickets/generic_ticket_" + ticket.getEventId() + ".pdf";
+        String fileName = "generic_ticket_" + ticket.getEventId() + ".pdf";
+
+        // Download the PDF template from S3
+        byte[] pdfTemplate = storageService.downloadFile(fileName);
+        // Load the PDF template
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try (PDDocument document = Loader.loadPDF(new File(TEMPLATE_PATH))) {
+        try (PDDocument document = Loader.loadPDF(pdfTemplate)) {
             PDPage page = document.getPage(0);
 
             try (PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {

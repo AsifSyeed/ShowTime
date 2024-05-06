@@ -2,6 +2,7 @@ package com.example.showtime.ticket.service.impl;
 
 import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.common.uniqueId.UniqueIdGenerator;
+import com.example.showtime.email.service.IEmailService;
 import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.services.IEventService;
 import com.example.showtime.ticket.model.entity.Category;
@@ -32,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -44,6 +46,7 @@ public class TicketService implements ITicketService {
     private final IEventService eventService;
     private final ICategoryService categoryService;
     private final SSLTransactionInitiator sslTransactionInitiator;
+    private final IEmailService emailService;
 
     @Value("${node.id}")
     private Long nodeId;
@@ -201,11 +204,17 @@ public class TicketService implements ITicketService {
     public void updateTicketStatus(List<Ticket> selectedTickets, int transactionStatus) {
         if (transactionStatus != TransactionStatusEnum.SUCCESS.getValue()) {
             eventService.updateAvailableTickets(selectedTickets.get(0).getEventId(), selectedTickets.get(0).getTicketCategory(), (-selectedTickets.size()));
+        } else {
+            CompletableFuture.runAsync(() -> sendEmailToCustomer(selectedTickets));
         }
 
         selectedTickets.forEach(ticket -> {
             ticket.setTicketTransactionStatus(transactionStatus);
             ticketRepository.save(ticket);
         });
+    }
+
+    private void sendEmailToCustomer(List<Ticket> selectedTickets) {
+        emailService.sendTicketConfirmationMail(selectedTickets);
     }
 }

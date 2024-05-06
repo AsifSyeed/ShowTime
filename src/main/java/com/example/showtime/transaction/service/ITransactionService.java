@@ -10,5 +10,5 @@ public interface ITransactionService {
 
     TransactionItem getTransactionByUserEmailAndTransactionRefNo(String email, String transactionRefNo);
 
-    void sslTransactionUpdate(String transactionRefNo, String validationId, String amount, String currency, String status);
+    void sslTransactionUpdate(String transactionRefNo, String validationId, String amount, String currency, String status, String error, String bank_tran_id);
 }

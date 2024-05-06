@@ -164,9 +164,6 @@ public class SSLCommerz {
      * merchantTrnxnAmount: merchants transaction amount.
      * @param merchantTrnxnCurrency
      * merchantTrnxnCurrency: Merchants transaction amount
-     * @param requestParameters
-     *  requestParameters is a Map of String as key and String as value
-     *  which should be constructed from the success response of the payment page.
      * @return
      * Returns a boolean value indicating a valid success response or not.
      * @throws IOException
@@ -188,8 +185,8 @@ public class SSLCommerz {
             if (resp.status.equals("VALID") || resp.status.equals("VALIDATED")) {
 
                 if (merchantTrnxnId.equals(resp.tran_id)
-                        && (Math.abs(Double.parseDouble(merchantTrnxnAmount) - Double.parseDouble(resp.currency_amount)) < 1)
-                        && merchantTrnxnCurrency.equals(resp.currency_type)) {
+                        && (Math.abs(Double.parseDouble(merchantTrnxnAmount) - Double.parseDouble(resp.amount)) < 1)
+                        && merchantTrnxnCurrency.equals(resp.currency)) {
                     return true;
                 } else {
                     this.error = "Currency Amount not matching";

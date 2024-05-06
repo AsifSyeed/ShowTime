@@ -33,11 +33,12 @@ public class TransactionController {
                                                       @RequestParam(required = false) String amount,
                                                       @RequestParam(required = false) String bank_tran_id,
                                                       @RequestParam(required = false) String currency,
+                                                      @RequestParam(required = false) String error,
                                                       @RequestParam(required = false) String status) {
 
-        transactionService.sslTransactionUpdate(tran_id, val_id, amount, currency, status);
+        transactionService.sslTransactionUpdate(tran_id, val_id, amount, currency, status, error, bank_tran_id);
 
-        String frontendUrl = "https://countersbd.com/checkout/validate?&tran_id=" + tran_id;
+        String frontendUrl = "http://localhost:3000/checkout/validate?&tran_id=" + tran_id;
         URI redirectUri = ServletUriComponentsBuilder.fromUriString(frontendUrl).build().toUri();
 
         return ResponseEntity.status(HttpStatus.FOUND).location(redirectUri).build();

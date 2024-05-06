@@ -49,49 +49,49 @@ public class TransactionService implements ITransactionService {
         }
     }
 
-    private void updateTransactionStatus(TransactionItem transactionItem, TransactionStatusEnum transactionStatus) {
-        transactionItem.setTransactionStatus(transactionStatus.getValue());
-        transactionRepository.save(transactionItem);
-    }
-
     @Override
     public TransactionItem getTransactionByUserEmailAndTransactionRefNo(String email, String transactionRefNo) {
         return transactionRepository.findByUserEmailAndTransactionRefNo(email, transactionRefNo);
     }
 
     @Override
-    public void sslTransactionUpdate(String transactionRefNo, String validationId, String amount, String currency, String status) {
-        boolean sslStatusFromRedirectUrl = status.equals("VALID");
+    public void sslTransactionUpdate(String transactionRefNo, String validationId, String amount, String currency, String status, String error, String bank_tran_id) {
 
+        if (transactionRefNo == null || transactionRefNo.isEmpty()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction ID is required");
+        }
+
+        if (currency == null || currency.isEmpty()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Currency is required");
+        }
+
+        boolean sslStatusFromRedirectUrl = status.equals("VALID") || status.equals("VALIDATED");
+        boolean sslStatus = sslTransactionInitiator.verifySSLTransaction(transactionRefNo, validationId, amount, currency);
         List<Ticket> tickets = ticketService.getTicketListByTransactionRefNo(transactionRefNo);
 
-        if (sslStatusFromRedirectUrl) {
-            if (transactionRefNo == null || transactionRefNo.isEmpty()) {
-                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction ID is required");
-            }
+        TransactionItem transactionItem = new TransactionItem();
+        transactionItem.setTransactionRefNo(transactionRefNo);
+        transactionItem.setTotalAmount(Double.valueOf(amount));
+        transactionItem.setEventId(tickets.get(0).getEventId());
+        transactionItem.setTransactionDate(Calendar.getInstance().getTime());
+        transactionItem.setUserEmail(tickets.get(0).getTicketCreatedBy());
+        transactionItem.setNumberOfTickets(tickets.size());
+        transactionItem.setBankTranId(bank_tran_id);
+        transactionItem.setErrorMessage(error);
+        transactionItem.setValidationId(validationId);
 
-            if (currency == null || currency.isEmpty()) {
-                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Currency is required");
-            }
-
-            boolean sslStatus = sslTransactionInitiator.verifySSLTransaction(transactionRefNo, validationId, amount, currency);
-
+        if (sslStatus == sslStatusFromRedirectUrl) {
             if (sslStatus) {
-                TransactionItem transactionItem = new TransactionItem();
-                transactionItem.setTransactionRefNo(transactionRefNo);
-                transactionItem.setTotalAmount(Double.valueOf(amount));
-                transactionItem.setEventId(tickets.get(0).getEventId());
-                transactionItem.setTransactionDate(Calendar.getInstance().getTime());
                 transactionItem.setTransactionStatus(TransactionStatusEnum.SUCCESS.getValue());
-                transactionItem.setUserEmail(tickets.get(0).getTicketCreatedBy());
-                transactionItem.setNumberOfTickets(tickets.size());
-
-                transactionRepository.save(transactionItem);
-
                 updateTicketsStatus(tickets, TransactionStatusEnum.SUCCESS.getValue());
+            } else {
+                transactionItem.setTransactionStatus(TransactionStatusEnum.FAILED.getValue());
+                updateTicketsStatus(tickets, TransactionStatusEnum.FAILED.getValue());
             }
+
+            transactionRepository.save(transactionItem);
         } else {
-            updateTicketsStatus(tickets, TransactionStatusEnum.FAILED.getValue());
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction data mismatched");
         }
     }
 

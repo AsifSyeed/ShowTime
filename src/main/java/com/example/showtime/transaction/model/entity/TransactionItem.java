@@ -35,4 +35,13 @@ public class TransactionItem {
 
     @Column(name = "NUMBER_OF_TICKETS")
     private int numberOfTickets;
+
+    @Column(name = "BANK_TRAN_ID")
+    private String bankTranId;
+
+    @Column(name = "VALIDATION_ID")
+    private String validationId;
+
+    @Column(name = "ERROR_MESSAGE")
+    private String errorMessage;
 }
