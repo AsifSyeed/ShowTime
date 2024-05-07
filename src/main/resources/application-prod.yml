@@ -1,14 +1,17 @@
 spring:
   datasource:
-    url: jdbc:postgresql://showtimedb.c12siig6uo0v.us-east-1.rds.amazonaws.com:5432/showTime
+    url: jdbc:postgresql://3.109.34.237:5432/countersdb_prod
     username: postgres
-    password: Tool4421
+    password: Relevant@2024
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+sslcommerz:
+  store:
+    id: countersbd0live
+    password: 662A9CCB72A9A14662
+  test:
+    mode: false
+  redirect:
+    base:
+      url: https://api.countersbd.com
+    web:
+      url: https://countersbd.com

@@ -132,7 +132,7 @@ public class TicketService implements ITicketService {
         }
 
         if (!isTicketInStock(buyTicketRequest.getTicketCategory(), buyTicketRequest.getEventId(), (long) buyTicketRequest.getTicketOwnerInformation().size())) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket is not in stock");
+            throw new BaseException(HttpStatus.NOT_FOUND.value(), "Ticket is not in stock");
         }
     }
 
@@ -143,7 +143,7 @@ public class TicketService implements ITicketService {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Category not found");
         }
 
-        return selectedCategory.getCategoryAvailableCount() - numberOfTicket > 0;
+        return !(selectedCategory.getCategoryAvailableCount() - numberOfTicket < 0);
     }
 
     @Override

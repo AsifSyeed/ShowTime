@@ -1,3 +1,27 @@
+spring:
+  profiles:
+    active: dev
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: releventbangladesh@gmail.com
+    password: jufhcvtyaywcwavi
+    properties:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
+
 server:
   error:
     include-message: always
@@ -10,24 +34,16 @@ jwt:
 node:
   id: 012358
 
-sslcommerz:
-  store:
-    id: count65fb2b409c69c
-    password: count65fb2b409c69c@ssl
-  test:
-    mode: true
+cloud:
+  aws:
+    credentials:
+      access-key: AKIA47CRXRGLUQSHYL7J
+      secret-key: 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
+    region:
+        static: ap-south-1
+    stack:
+      auto: false
 
-spring:
-  profiles:
-    active: dev
-
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: releventbangladesh@gmail.com
-    password: jufhcvtyaywcwavi
-    properties:
-      smtp:
-        auth: true
-        starttls:
-          enable: true
+application:
+  bucket:
+    name: countersbd-ticket-bucket

@@ -7,7 +7,8 @@ public enum TransactionStatusEnum {
     INITIATED(1),
     PENDING(2),
     SUCCESS(3),
-    FAILED(4);
+    FAILED(4),
+    CANCELLED(5);
 
     private final int value;
 

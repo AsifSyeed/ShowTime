@@ -5,6 +5,7 @@ import com.example.showtime.transaction.model.request.CheckTransactionStatusRequ
 import com.example.showtime.transaction.model.response.CheckTransactionStatusResponse;
 import com.example.showtime.transaction.service.ITransactionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,9 @@ import java.net.URI;
 @RequestMapping("/api/v1/transaction")
 public class TransactionController {
     private final ITransactionService transactionService;
+
+    @Value("${sslcommerz.redirect.web.url}")
+    private String redirectWebUrl;
 
     @PostMapping("/check-status")
     public ResponseEntity<ApiResponse<CheckTransactionStatusResponse>> checkStatus(@RequestBody @Valid CheckTransactionStatusRequest checkTransactionStatusRequest) {
@@ -38,7 +42,7 @@ public class TransactionController {
 
         transactionService.sslTransactionUpdate(tran_id, val_id, amount, currency, status, error, bank_tran_id);
 
-        String frontendUrl = "http://localhost:3000/checkout/validate?&tran_id=" + tran_id;
+        String frontendUrl = redirectWebUrl + "/checkout/validate?&tran_id=" + tran_id;
         URI redirectUri = ServletUriComponentsBuilder.fromUriString(frontendUrl).build().toUri();
 
         return ResponseEntity.status(HttpStatus.FOUND).location(redirectUri).build();

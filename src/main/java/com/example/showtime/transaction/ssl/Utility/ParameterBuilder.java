@@ -1,20 +1,15 @@
 package com.example.showtime.transaction.ssl.Utility;
 
-import com.example.showtime.common.exception.BaseException;
-import com.example.showtime.transaction.model.entity.TransactionItem;
 import com.example.showtime.user.model.entity.UserAccount;
-import com.example.showtime.user.repository.UserRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
+@Component
 public class ParameterBuilder {
-    private static UserRepository userRepository;
 
     public static String getParamsString(Map<String, String> params, boolean urlEncode) throws UnsupportedEncodingException {
         StringBuilder result = new StringBuilder();
@@ -39,16 +34,15 @@ public class ParameterBuilder {
                 : resultString;
     }
 
-    public static Map<String, String> constructRequestParameters(String transactionReferenceNo, Double totalPrice, UserAccount createdBy) {
+    public static Map<String, String> constructRequestParameters(String transactionReferenceNo, Double totalPrice, UserAccount createdBy, String redirectBaseUrl) {
 
         // CREATING LIST OF POST DATA
-        String baseUrl = "http://localhost:8080/";//Request.Url.Scheme + "://" + Request.Url.Authority + Request.ApplicationPath.TrimEnd('/') + "/";
         Map<String, String> postData = new HashMap<String, String>();
         postData.put("total_amount", totalPrice.toString());
         postData.put("tran_id", transactionReferenceNo); // use unique tran_id for each API call
-        postData.put("success_url", baseUrl + "api/v1/transaction/ssl-redirect");
-        postData.put("fail_url", baseUrl + "api/v1/transaction/ssl-redirect");
-        postData.put("cancel_url", baseUrl + "api/v1/transaction/ssl-redirect");
+        postData.put("success_url", redirectBaseUrl + "/api/v1/transaction/ssl-redirect");
+        postData.put("fail_url", redirectBaseUrl + "/api/v1/transaction/ssl-redirect");
+        postData.put("cancel_url", redirectBaseUrl + "/api/v1/transaction/ssl-redirect");
         postData.put("cus_name", createdBy.getUserFullName());
         postData.put("cus_email", createdBy.getEmail());
         postData.put("cus_add1", "Address Line One");
@@ -60,7 +54,6 @@ public class ParameterBuilder {
         postData.put("product_name", "Test Product");
         postData.put("product_category", "General");
         postData.put("product_profile", "General");
-//        postData.put("ipn_url", "https://api.countersbd.com/api/v1/transaction/ssl-redirect");
 //        postData.put("ship_name", "ABC XY");
 //        postData.put("ship_add1", "Address Line One");
 //        postData.put("ship_add2", "Address Line Two");

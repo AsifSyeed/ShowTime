@@ -19,6 +19,9 @@ public class SSLTransactionInitiator {
     @Value("${sslcommerz.test.mode}")
     private boolean storeTestMode;
 
+    @Value("${sslcommerz.redirect.base.url}")
+    private String redirectBaseUrl;
+
     public String initiateSSLTransaction(String transactionRef, Double totalPrice, UserAccount createdBy) {
         String response = "";
         try {
@@ -27,7 +30,7 @@ public class SSLTransactionInitiator {
              * keep an eye on success fail url correctly.
              * insert your success and fail URL correctly in this Map
              */
-            Map<String, String> postData = ParameterBuilder.constructRequestParameters(transactionRef, totalPrice, createdBy);
+            Map<String, String> postData = ParameterBuilder.constructRequestParameters(transactionRef, totalPrice, createdBy, redirectBaseUrl);
             /**
              * Provide your SSL Commerz store Id and Password by this following constructor.
              * If Test Mode then insert true and false otherwise.
