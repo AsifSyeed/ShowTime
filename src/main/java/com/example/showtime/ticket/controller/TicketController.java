@@ -2,6 +2,7 @@ package com.example.showtime.ticket.controller;
 
 import com.example.showtime.common.model.response.ApiResponse;
 import com.example.showtime.ticket.model.request.BuyTicketRequest;
+import com.example.showtime.ticket.model.request.CheckTicketRequest;
 import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import com.example.showtime.ticket.model.response.MyTicketResponse;
 import com.example.showtime.ticket.service.ITicketService;
@@ -35,6 +36,15 @@ public class TicketController {
         List<MyTicketResponse> myTicketResponses = ticketService.getMyTickets();
 
         ApiResponse<List<MyTicketResponse>> response = new ApiResponse<>(HttpStatus.OK.value(), "Tickets retrieved successfully", myTicketResponses);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<ApiResponse<?>> verifyTicket(@RequestBody @Valid CheckTicketRequest checkTicketRequest) {
+        ticketService.verifyTicket(checkTicketRequest);
+
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Ticket verified successfully", null);
 
         return ResponseEntity.ok(response);
     }

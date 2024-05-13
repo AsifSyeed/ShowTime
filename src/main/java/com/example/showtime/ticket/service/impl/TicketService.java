@@ -8,6 +8,7 @@ import com.example.showtime.event.services.IEventService;
 import com.example.showtime.ticket.model.entity.Category;
 import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.ticket.model.request.BuyTicketRequest;
+import com.example.showtime.ticket.model.request.CheckTicketRequest;
 import com.example.showtime.ticket.model.request.TicketOwnerInformationRequest;
 import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import com.example.showtime.ticket.model.response.MyTicketResponse;
@@ -16,6 +17,7 @@ import com.example.showtime.ticket.service.ICategoryService;
 import com.example.showtime.ticket.service.ITicketService;
 import com.example.showtime.transaction.enums.TransactionStatusEnum;
 import com.example.showtime.transaction.ssl.SSLTransactionInitiator;
+import com.example.showtime.user.enums.UserRole;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -170,6 +173,11 @@ public class TicketService implements ITicketService {
     }
 
     @Override
+    public Ticket getTicketByTicketId(String ticketId) {
+        return ticketRepository.findByTicketId(ticketId);
+    }
+
+    @Override
     public List<Ticket> getTicketListByTransactionRefNo(String transactionRefNo) {
         return ticketRepository.findByTicketTransactionId(transactionRefNo);
     }
@@ -212,6 +220,41 @@ public class TicketService implements ITicketService {
             ticket.setTicketTransactionStatus(transactionStatus);
             ticketRepository.save(ticket);
         });
+    }
+
+    @Override
+    public void verifyTicket(CheckTicketRequest checkTicketRequest) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .orElse(null);
+
+        if (userRole == null || Integer.parseInt(userRole) != UserRole.ADMIN.getValue()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "User not authorized to do the action");
+        }
+
+        if (checkTicketRequest.getTicketId().isEmpty()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket id is required");
+        }
+
+        Ticket ticket = getTicketByTicketId(checkTicketRequest.getTicketId());
+
+        if (ticket == null) {
+            throw new BaseException(HttpStatus.NOT_FOUND.value(), "Ticket not found");
+        }
+
+        if (ticket.isUsed()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket already used");
+        }
+
+        if (ticket.getTicketTransactionStatus() != TransactionStatusEnum.SUCCESS.getValue()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket not verified");
+        }
+
+        ticket.setUsed(true);
+        ticketRepository.save(ticket);
     }
 
     private void sendEmailToCustomer(List<Ticket> selectedTickets) {

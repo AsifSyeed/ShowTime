@@ -13,4 +13,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     List<Ticket> findByTicketTransactionId(String transactionRefNo);
 
     List<Ticket> findByTicketCreatedBy(String email);
+
+    Ticket findByTicketId(String ticketId);
 }

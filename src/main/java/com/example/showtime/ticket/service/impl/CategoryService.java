@@ -35,7 +35,8 @@ public class CategoryService implements ICategoryService {
 
     @Override
     public List<Category> getAllCategoriesByEventId(String eventId) {
-        return categoryRepository.findAllByEventId(eventId);
+        //Find categories by eventId and descending order of category price
+        return categoryRepository.findByEventIdOrderByCategoryPriceDesc(eventId);
     }
 
     @Override
