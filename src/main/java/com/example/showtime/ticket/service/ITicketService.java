@@ -24,4 +24,6 @@ public interface ITicketService {
     void updateTicketStatus(List<Ticket> selectedTickets, int transactionStatus);
 
     void verifyTicket(CheckTicketRequest checkTicketRequest);
+
+    void sendEmail(String ticketId);
 }

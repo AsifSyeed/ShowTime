@@ -50,9 +50,7 @@ public class TicketService implements ITicketService {
     private final ICategoryService categoryService;
     private final SSLTransactionInitiator sslTransactionInitiator;
     private final IEmailService emailService;
-
-    @Value("${node.id}")
-    private Long nodeId;
+    private final UniqueIdGenerator uniqueIdGenerator;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -84,8 +82,6 @@ public class TicketService implements ITicketService {
 
         Event selectedEvent = eventService.getEventById(buyTicketRequest.getEventId());
         List<TicketOwnerInformationRequest> ticketOwnerInformation = buyTicketRequest.getTicketOwnerInformation();
-
-        UniqueIdGenerator uniqueIdGenerator = new UniqueIdGenerator(nodeId);
 
         String refId = uniqueIdGenerator.generateUniqueTransactionReferenceNo(selectedEvent.getEventId().substring(0, 2));
 
@@ -190,7 +186,8 @@ public class TicketService implements ITicketService {
         UserAccount createdBy = userService.getUserByEmail(createdByUserEmail);
 
         try {
-            return ticketRepository.findByTicketCreatedBy(createdBy.getEmail()).stream()
+
+            return ticketRepository.findByTicketCreatedByOrderByTicketCreatedDateDesc(createdBy.getEmail()).stream()
                     .map(ticket -> MyTicketResponse.builder()
                             .ticketId(ticket.getTicketId())
                             .eventName(ticket.getEventName())
@@ -255,6 +252,40 @@ public class TicketService implements ITicketService {
 
         ticket.setUsed(true);
         ticketRepository.save(ticket);
+    }
+
+    @Override
+    public void sendEmail(String ticketId) {
+        if (ticketId.isEmpty()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket id is required");
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String createdByUserEmail = authentication.getName();
+
+        UserAccount createdBy = userService.getUserByEmail(createdByUserEmail);
+
+        try {
+            Ticket ticket = getTicketByUserAndTicketId(createdBy, ticketId);
+
+            if (ticket == null) {
+                throw new BaseException(HttpStatus.NOT_FOUND.value(), "Ticket not found");
+            }
+
+            if (ticket.isUsed()) {
+                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket already used");
+            }
+
+            List<Ticket> selectedTickets = List.of(ticket);
+            sendEmailToCustomer(selectedTickets);
+
+        } catch (AccessDeniedException e) {
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
+        }
+    }
+
+    private Ticket getTicketByUserAndTicketId(UserAccount createdBy, String ticketId) {
+        return ticketRepository.findByTicketIdAndTicketCreatedBy(ticketId, createdBy.getEmail());
     }
 
     private void sendEmailToCustomer(List<Ticket> selectedTickets) {

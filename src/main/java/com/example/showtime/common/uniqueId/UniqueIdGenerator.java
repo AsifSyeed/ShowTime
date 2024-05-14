@@ -1,8 +1,12 @@
 package com.example.showtime.common.uniqueId;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Component
 public class UniqueIdGenerator {
     private static final int SEQUENCE_BITS = 12;
     private static final int MAX_SEQUENCE = (int) (Math.pow(2, SEQUENCE_BITS) - 1);
@@ -10,12 +14,8 @@ public class UniqueIdGenerator {
     private final AtomicInteger sequence = new AtomicInteger(0);
     private long lastTimestamp = -1L;
 
-    private final long nodeId;
-
-    public UniqueIdGenerator(long nodeId) {
-        this.nodeId = nodeId;
-    }
-
+    @Value("${node.id}")
+    private Long nodeId;
 
     public synchronized String generateUniqueId(String prefix) {
         long timestamp = System.currentTimeMillis();
@@ -25,12 +25,12 @@ public class UniqueIdGenerator {
         }
 
         if (lastTimestamp == timestamp) {
+            sequence.set(0);
+        } else {
             int sequenceValue = sequence.incrementAndGet() & MAX_SEQUENCE;
             if (sequenceValue == 0) {
                 timestamp = tilNextMillis(lastTimestamp);
             }
-        } else {
-            sequence.set(0);
         }
 
         lastTimestamp = timestamp;

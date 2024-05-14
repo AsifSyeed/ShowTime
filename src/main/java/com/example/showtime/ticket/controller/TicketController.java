@@ -48,4 +48,13 @@ public class TicketController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/send-email")
+    public ResponseEntity<ApiResponse<?>> sendEmail(@RequestParam String ticketId) {
+        ticketService.sendEmail(ticketId);
+
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Email sent successfully", null);
+
+        return ResponseEntity.ok(response);
+    }
 }

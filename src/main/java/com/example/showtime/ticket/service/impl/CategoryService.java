@@ -35,7 +35,6 @@ public class CategoryService implements ICategoryService {
 
     @Override
     public List<Category> getAllCategoriesByEventId(String eventId) {
-        //Find categories by eventId and descending order of category price
         return categoryRepository.findByEventIdOrderByCategoryPriceDesc(eventId);
     }
 
@@ -53,13 +52,13 @@ public class CategoryService implements ICategoryService {
 
     private void prepareCategoryModel(List<CategoryRequest> categoryList, String eventId) {
 
-        for (int i = 0; i < categoryList.size(); i++) {
+        for (CategoryRequest categoryRequest : categoryList) {
             Category category = new Category();
-            category.setCategoryName(categoryList.get(i).getCategoryName());
-            category.setCategoryPrice(categoryList.get(i).getCategoryPrice());
-            category.setCategoryCapacity(categoryList.get(i).getCategoryCapacity());
-            category.setCategoryAvailableCount(categoryList.get(i).getCategoryCapacity());
-            category.setCategoryDescription(categoryList.get(i).getCategoryDescription());
+            category.setCategoryName(categoryRequest.getCategoryName());
+            category.setCategoryPrice(categoryRequest.getCategoryPrice());
+            category.setCategoryCapacity(categoryRequest.getCategoryCapacity());
+            category.setCategoryAvailableCount(categoryRequest.getCategoryCapacity());
+            category.setCategoryDescription(categoryRequest.getCategoryDescription());
             category.setEventId(eventId);
 
             categoryRepository.save(category);
