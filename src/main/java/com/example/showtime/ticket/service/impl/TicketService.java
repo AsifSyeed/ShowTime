@@ -22,7 +22,6 @@ import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -83,7 +82,7 @@ public class TicketService implements ITicketService {
         Event selectedEvent = eventService.getEventById(buyTicketRequest.getEventId());
         List<TicketOwnerInformationRequest> ticketOwnerInformation = buyTicketRequest.getTicketOwnerInformation();
 
-        String refId = uniqueIdGenerator.generateUniqueTransactionReferenceNo(selectedEvent.getEventId().substring(0, 2));
+        String refId = uniqueIdGenerator.generateUniqueUUID(selectedEvent.getEventId().substring(0, 2));
 
         newTickets = IntStream.range(0, Math.toIntExact(ticketOwnerInformation.size()))
                 .parallel()

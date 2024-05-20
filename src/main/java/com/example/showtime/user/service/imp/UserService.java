@@ -1,10 +1,14 @@
 package com.example.showtime.user.service.imp;
 
 import com.example.showtime.common.exception.BaseException;
+import com.example.showtime.tfa.enums.FeatureEnum;
+import com.example.showtime.tfa.service.ITFAService;
 import com.example.showtime.user.enums.UserRole;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.model.request.SignUpRequest;
 import com.example.showtime.common.model.response.UserProfileResponse;
+import com.example.showtime.user.model.request.SignUpTfaVerifyRequest;
+import com.example.showtime.user.model.response.SignUpResponse;
 import com.example.showtime.user.repository.UserRepository;
 import com.example.showtime.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
@@ -28,14 +32,46 @@ public class UserService implements IUserService {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final ITFAService tfaService;
+
     @Override
-    public void signUpUser(SignUpRequest signUpRequest) {
+    public SignUpResponse signUpUser(SignUpRequest signUpRequest) {
 
         validateRequest(signUpRequest);
 
-        UserAccount userAccount = prepareUserModel(signUpRequest);
+        UserAccount existingUserAccount = userRepository.findByEmail(signUpRequest.getEmail()).orElse(null);
 
-        userRepository.save(userAccount);
+        if (Objects.nonNull(existingUserAccount) && existingUserAccount.getIsOtpVerified()) {
+            if (isEmailExists(signUpRequest.getEmail())) {
+                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Email already used");
+            }
+
+            if (isUserNameExists(signUpRequest.getUserName())) {
+                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Username already used");
+            }
+
+            if (isPhoneNumberExists(signUpRequest.getPhoneNumber())) {
+                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Phone Number already used");
+            }
+        }
+
+        if (existingUserAccount == null) {
+            UserAccount userAccount = prepareUserModel(signUpRequest);
+
+            userRepository.save(userAccount);
+
+            return SignUpResponse.builder()
+                    .sessionId(getTfaSessionId(userAccount.getEmail(), FeatureEnum.SIGN_UP.getValue()))
+                    .build();
+        } else {
+            return SignUpResponse.builder()
+                    .sessionId(getTfaSessionId(existingUserAccount.getEmail(), FeatureEnum.SIGN_UP.getValue()))
+                    .build();
+        }
+    }
+
+    private String getTfaSessionId(String email, int featureCode) {
+        return tfaService.generateTfaSessionId(email, featureCode);
     }
 
     @Override
@@ -69,6 +105,15 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
     }
 
+    @Override
+    public void verifyUser(SignUpTfaVerifyRequest signUpTfaVerifyRequest) {
+        UserAccount userAccount = userRepository.findByEmail(signUpTfaVerifyRequest.getEmail())
+                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+
+        userAccount.setIsOtpVerified(tfaService.verifyOtp(userAccount.getEmail(), signUpTfaVerifyRequest.getTfaData().getSessionId(), signUpTfaVerifyRequest.getTfaData().getOtp(), signUpTfaVerifyRequest.getTfaData().getFeatureCode()));
+        userRepository.save(userAccount);
+    }
+
     private void validateRequest(SignUpRequest signUpRequest) {
         if (Objects.isNull(signUpRequest) ||
                 StringUtils.isEmpty(signUpRequest.getEmail()) ||
@@ -78,18 +123,6 @@ public class UserService implements IUserService {
                 !isValidUserRole(signUpRequest.getUserRole())) {
 
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Request body is not valid");
-        }
-
-        if (isEmailExists(signUpRequest.getEmail())) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Email ID already used");
-        }
-
-        if (isUserNameExists(signUpRequest.getUserName())) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Username already used");
-        }
-
-        if (isPhoneNumberExists(signUpRequest.getPhoneNumber())) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Phone Number already used");
         }
     }
 
@@ -103,6 +136,7 @@ public class UserService implements IUserService {
         userAccount.setRole(signUpRequest.getUserRole());
         userAccount.setUserFullName(signUpRequest.getUserFullName());
         userAccount.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
+        userAccount.setIsOtpVerified(false);
 
         return userAccount;
     }

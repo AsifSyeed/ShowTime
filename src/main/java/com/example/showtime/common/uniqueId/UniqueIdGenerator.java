@@ -46,10 +46,15 @@ public class UniqueIdGenerator {
         return timestamp;
     }
 
-    public String generateUniqueTransactionReferenceNo(String prefix) {
+    public String generateUniqueUUID(String prefix) {
         long timestamp = System.currentTimeMillis();
         long nodeIdMod = timestamp % Long.parseLong(String.valueOf(nodeId)); // Mod nodeId with current milliseconds
 
         return (prefix + nodeIdMod + "-" + UUID.randomUUID()).toLowerCase(); // Combine prefix, nodeIdMod, and UUID
+    }
+
+    //Write a function to generate a 6 digit OTP
+    public String generateOTP() {
+        return String.valueOf((int) (Math.random() * 900000) + 100000);
     }
 }

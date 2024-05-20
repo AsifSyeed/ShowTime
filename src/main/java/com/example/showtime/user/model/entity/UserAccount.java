@@ -36,4 +36,7 @@ public class UserAccount {
 
     @Column(name = "USER_FULL_NAME")
     private String userFullName;
+
+    @Column(name = "IS_OTP_VERIFIED")
+    private Boolean isOtpVerified;
 }

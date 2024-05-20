@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface IEmailService {
     void sendTicketConfirmationMail(List<Ticket> transactionTicketList);
+
+    void sendOtp(String email, String otp);
 }

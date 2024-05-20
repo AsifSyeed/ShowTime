@@ -10,6 +10,5 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class SignUpResponse {
-    private String userName;
-    private String emailId;
+    private String sessionId;
 }

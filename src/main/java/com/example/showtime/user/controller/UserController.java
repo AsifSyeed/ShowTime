@@ -1,8 +1,11 @@
 package com.example.showtime.user.controller;
 
+import com.example.showtime.tfa.model.request.TFAVerifyRequest;
 import com.example.showtime.user.model.request.SignUpRequest;
 import com.example.showtime.common.model.response.ApiResponse;
 import com.example.showtime.common.model.response.UserProfileResponse;
+import com.example.showtime.user.model.request.SignUpTfaVerifyRequest;
+import com.example.showtime.user.model.response.SignUpResponse;
 import com.example.showtime.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,11 +23,11 @@ public class UserController {
     private final IUserService iUserService;
 
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<?>> signUpUser(@RequestBody @Valid SignUpRequest signUpRequest) {
+    public ResponseEntity<ApiResponse<SignUpResponse>> signUpUser(@RequestBody @Valid SignUpRequest signUpRequest) {
 
-        iUserService.signUpUser(signUpRequest);
+        SignUpResponse signUpResponse = iUserService.signUpUser(signUpRequest);
 
-        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "User signed up successfully", null);
+        ApiResponse<SignUpResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Operation Successful", signUpResponse);
 
         return ResponseEntity.ok(response);
     }
@@ -35,6 +38,15 @@ public class UserController {
         UserProfileResponse userProfileResponse = iUserService.getUserProfile();
 
         ApiResponse<UserProfileResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "User profile fetched successfully", userProfileResponse);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<ApiResponse<?>> verifyUser(@RequestBody @Valid SignUpTfaVerifyRequest signUpTfaVerifyRequest) {
+        iUserService.verifyUser(signUpTfaVerifyRequest);
+
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "User verified successfully", null);
 
         return ResponseEntity.ok(response);
     }

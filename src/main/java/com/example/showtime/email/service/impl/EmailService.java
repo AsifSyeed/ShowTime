@@ -37,6 +37,29 @@ public class EmailService implements IEmailService {
         }
     }
 
+    @Override
+    public void sendOtp(String email, String otp) {
+        // Send OTP to the user's email
+        try {
+            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
+            mimeMessageHelper.setFrom(from);
+            mimeMessageHelper.setTo(email);
+            mimeMessageHelper.setSubject("OTP for Two Factor Authentication");
+
+            // Set HTML content
+            String htmlContent = "<p style=\"font-size: 16px;\"><strong>Dear Customer</strong></p>"
+                    + "<p>Your One Time Password is: <strong>" + otp + "</strong></p>"
+                    + "<p>Regards,<br/>Relevant Bangladesh</p>";
+
+            mimeMessageHelper.setText(htmlContent, true);
+
+            javaMailSender.send(mimeMessage);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void sendPdf(Ticket ticket) {
         try {
             byte[] pdfBytes = pdfGenerator.generateTicketPdf(ticket);
@@ -48,7 +71,7 @@ public class EmailService implements IEmailService {
             mimeMessageHelper.setSubject("Ticket for " + ticket.getEventName());
 
             // Set HTML content
-            String htmlContent = "<p style=\"font-size: 16px;\"><strong>Hello " + ticket.getTicketOwnerName() + ",</strong></p>"
+            String htmlContent = "<p style=\"font-size: 16px;\"><strong>Dear " + ticket.getTicketOwnerName() + ",</strong></p>"
                     + "<p>Your ticket has been attached to this email. Please check the attached file.</p>"
                     + "<p>Regards,<br/>Relevant Bangladesh</p>";
 
