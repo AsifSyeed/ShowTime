@@ -1,6 +1,6 @@
 package com.example.showtime.user.controller;
 
-import com.example.showtime.tfa.model.request.TFAVerifyRequest;
+import com.example.showtime.user.model.request.ChangePasswordRequest;
 import com.example.showtime.user.model.request.ForgetPasswordRequest;
 import com.example.showtime.user.model.request.SignUpRequest;
 import com.example.showtime.common.model.response.ApiResponse;
@@ -52,9 +52,9 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/forget-password/otp")
-    public ResponseEntity<ApiResponse<SignUpResponse>> forgetPassword(@RequestParam String emailId) {
-        SignUpResponse signUpResponse = iUserService.forgetPassword(emailId);
+    @PostMapping("/generic-otp")
+    public ResponseEntity<ApiResponse<SignUpResponse>> sendGenericOtp(@RequestParam String emailId, int featureCode) {
+        SignUpResponse signUpResponse = iUserService.sendGenericOtp(emailId, featureCode);
 
         ApiResponse<SignUpResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "OTP sent to your email", signUpResponse);
 
@@ -64,6 +64,15 @@ public class UserController {
     @PostMapping("/forget-password/verify")
     public ResponseEntity<ApiResponse<?>> verifyForgetPassword(@RequestBody @Valid ForgetPasswordRequest forgetPasswordRequest) {
         iUserService.verifyForgetPassword(forgetPasswordRequest);
+
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Password updated successfully", null);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("change-password")
+    public ResponseEntity<ApiResponse<?>> changePassword(@RequestBody @Valid ChangePasswordRequest changePasswordRequest) {
+        iUserService.changePassword(changePasswordRequest);
 
         ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Password updated successfully", null);
 

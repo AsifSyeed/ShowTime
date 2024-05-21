@@ -6,6 +6,7 @@ import com.example.showtime.tfa.model.request.TFAVerifyRequest;
 import com.example.showtime.tfa.service.ITFAService;
 import com.example.showtime.user.enums.UserRole;
 import com.example.showtime.user.model.entity.UserAccount;
+import com.example.showtime.user.model.request.ChangePasswordRequest;
 import com.example.showtime.user.model.request.ForgetPasswordRequest;
 import com.example.showtime.user.model.request.SignUpRequest;
 import com.example.showtime.common.model.response.UserProfileResponse;
@@ -121,13 +122,37 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public SignUpResponse forgetPassword(String emailId) {
-        UserAccount userAccount = userRepository.findByEmail(emailId)
-                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+    public SignUpResponse sendGenericOtp(String emailId, int featureCode) {
+        if (featureCode == 0 || emailId == null) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Invalid request");
+        }
 
-        return SignUpResponse.builder()
-                .sessionId(getTfaSessionId(userAccount.getEmail(), FeatureEnum.FORGET_PASSWORD.getValue()))
-                .build();
+        if (featureCode == FeatureEnum.FORGET_PASSWORD.getValue()) {
+            UserAccount userAccount = userRepository.findByEmail(emailId)
+                    .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+
+            return SignUpResponse.builder()
+                    .sessionId(getTfaSessionId(userAccount.getEmail(), featureCode))
+                    .build();
+        } else {
+            try {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                String createdByUserEmail = authentication.getName();
+
+                UserAccount userAccount = userRepository.findByEmail(createdByUserEmail)
+                        .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+
+                if (userAccount.getEmail().equals(emailId)) {
+                    return SignUpResponse.builder()
+                            .sessionId(getTfaSessionId(userAccount.getEmail(), featureCode))
+                            .build();
+                } else {
+                    throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Invalid request");
+                }
+            } catch (AccessDeniedException e) {
+                throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
+            }
+        }
     }
 
     @Override
@@ -138,6 +163,28 @@ public class UserService implements IUserService {
         if (isOtpVerified(forgetPasswordRequest.getEmail(), forgetPasswordRequest.getTfaData())) {
             userAccount.setPassword(passwordEncoder.encode(forgetPasswordRequest.getNewPassword()));
             userRepository.save(userAccount);
+        }
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest changePasswordRequest) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication.getName();
+
+            UserAccount userAccount = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+
+            if (isOtpVerified(userAccount.getEmail(), changePasswordRequest.getTfaData())) {
+                if (passwordEncoder.matches(changePasswordRequest.getOldPassword(), userAccount.getPassword())) {
+                    userAccount.setPassword(passwordEncoder.encode(changePasswordRequest.getNewPassword()));
+                    userRepository.save(userAccount);
+                } else {
+                    throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Invalid old password");
+                }
+            }
+        } catch (AccessDeniedException e) {
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
         }
     }
 

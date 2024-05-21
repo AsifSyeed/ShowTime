@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Calendar;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -44,8 +45,12 @@ public class TFAService implements ITFAService {
 
         String subject = "OTP for " + FeatureEnum.fromValue(featureCode).getDescription();
 
-        emailService.sendGenericEmail(email, subject, htmlContent);
+        CompletableFuture.runAsync(() -> sendOtpEmail(email, subject, htmlContent));
         return generatedOtp.getSessionId();
+    }
+
+    private void sendOtpEmail(String email, String subject, String htmlContent) {
+        emailService.sendGenericEmail(email, subject, htmlContent);
     }
 
     @Override
