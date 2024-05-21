@@ -2,9 +2,11 @@ package com.example.showtime.user.service.imp;
 
 import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.tfa.enums.FeatureEnum;
+import com.example.showtime.tfa.model.request.TFAVerifyRequest;
 import com.example.showtime.tfa.service.ITFAService;
 import com.example.showtime.user.enums.UserRole;
 import com.example.showtime.user.model.entity.UserAccount;
+import com.example.showtime.user.model.request.ForgetPasswordRequest;
 import com.example.showtime.user.model.request.SignUpRequest;
 import com.example.showtime.common.model.response.UserProfileResponse;
 import com.example.showtime.user.model.request.SignUpTfaVerifyRequest;
@@ -110,8 +112,33 @@ public class UserService implements IUserService {
         UserAccount userAccount = userRepository.findByEmail(signUpTfaVerifyRequest.getEmail())
                 .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
 
-        userAccount.setIsOtpVerified(tfaService.verifyOtp(userAccount.getEmail(), signUpTfaVerifyRequest.getTfaData().getSessionId(), signUpTfaVerifyRequest.getTfaData().getOtp(), signUpTfaVerifyRequest.getTfaData().getFeatureCode()));
+        userAccount.setIsOtpVerified(isOtpVerified(signUpTfaVerifyRequest.getEmail(), signUpTfaVerifyRequest.getTfaData()));
         userRepository.save(userAccount);
+    }
+
+    private Boolean isOtpVerified(String email, TFAVerifyRequest tfaData) {
+        return tfaService.verifyOtp(email, tfaData);
+    }
+
+    @Override
+    public SignUpResponse forgetPassword(String emailId) {
+        UserAccount userAccount = userRepository.findByEmail(emailId)
+                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+
+        return SignUpResponse.builder()
+                .sessionId(getTfaSessionId(userAccount.getEmail(), FeatureEnum.FORGET_PASSWORD.getValue()))
+                .build();
+    }
+
+    @Override
+    public void verifyForgetPassword(ForgetPasswordRequest forgetPasswordRequest) {
+        UserAccount userAccount = userRepository.findByEmail(forgetPasswordRequest.getEmail())
+                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
+
+        if (isOtpVerified(forgetPasswordRequest.getEmail(), forgetPasswordRequest.getTfaData())) {
+            userAccount.setPassword(passwordEncoder.encode(forgetPasswordRequest.getNewPassword()));
+            userRepository.save(userAccount);
+        }
     }
 
     private void validateRequest(SignUpRequest signUpRequest) {

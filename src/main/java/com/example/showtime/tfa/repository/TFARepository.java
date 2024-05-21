@@ -6,6 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TFARepository extends JpaRepository<GeneratedOtp, Long> {
-
-    GeneratedOtp findByCreatedByAndSessionIdAndOtp(String email, String sessionId, String otp);
+    GeneratedOtp findByCreatedByAndSessionIdAndOtpAndFeatureCode(String email, String sessionId, String otp, int featureCode);
 }

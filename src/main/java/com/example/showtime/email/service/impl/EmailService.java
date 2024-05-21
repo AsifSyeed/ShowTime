@@ -38,19 +38,14 @@ public class EmailService implements IEmailService {
     }
 
     @Override
-    public void sendOtp(String email, String otp) {
+    public void sendGenericEmail(String email, String subject, String htmlContent) {
         // Send OTP to the user's email
         try {
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
             mimeMessageHelper.setFrom(from);
             mimeMessageHelper.setTo(email);
-            mimeMessageHelper.setSubject("OTP for Two Factor Authentication");
-
-            // Set HTML content
-            String htmlContent = "<p style=\"font-size: 16px;\"><strong>Dear Customer</strong></p>"
-                    + "<p>Your One Time Password is: <strong>" + otp + "</strong></p>"
-                    + "<p>Regards,<br/>Relevant Bangladesh</p>";
+            mimeMessageHelper.setSubject(subject);
 
             mimeMessageHelper.setText(htmlContent, true);
 

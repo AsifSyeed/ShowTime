@@ -1,6 +1,7 @@
 package com.example.showtime.user.controller;
 
 import com.example.showtime.tfa.model.request.TFAVerifyRequest;
+import com.example.showtime.user.model.request.ForgetPasswordRequest;
 import com.example.showtime.user.model.request.SignUpRequest;
 import com.example.showtime.common.model.response.ApiResponse;
 import com.example.showtime.common.model.response.UserProfileResponse;
@@ -47,6 +48,24 @@ public class UserController {
         iUserService.verifyUser(signUpTfaVerifyRequest);
 
         ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "User verified successfully", null);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forget-password/otp")
+    public ResponseEntity<ApiResponse<SignUpResponse>> forgetPassword(@RequestParam String emailId) {
+        SignUpResponse signUpResponse = iUserService.forgetPassword(emailId);
+
+        ApiResponse<SignUpResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "OTP sent to your email", signUpResponse);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forget-password/verify")
+    public ResponseEntity<ApiResponse<?>> verifyForgetPassword(@RequestBody @Valid ForgetPasswordRequest forgetPasswordRequest) {
+        iUserService.verifyForgetPassword(forgetPasswordRequest);
+
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Password updated successfully", null);
 
         return ResponseEntity.ok(response);
     }

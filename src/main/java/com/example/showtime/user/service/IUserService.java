@@ -2,6 +2,7 @@ package com.example.showtime.user.service;
 
 import com.example.showtime.tfa.model.request.TFAVerifyRequest;
 import com.example.showtime.user.model.entity.UserAccount;
+import com.example.showtime.user.model.request.ForgetPasswordRequest;
 import com.example.showtime.user.model.request.SignUpRequest;
 import com.example.showtime.common.model.response.UserProfileResponse;
 import com.example.showtime.user.model.request.SignUpTfaVerifyRequest;
@@ -19,4 +20,8 @@ public interface IUserService {
     UserAccount getUserByEmail(String email);
 
     void verifyUser(SignUpTfaVerifyRequest signUpTfaVerifyRequest);
+
+    SignUpResponse forgetPassword(String emailId);
+
+    void verifyForgetPassword(ForgetPasswordRequest forgetPasswordRequest);
 }
