@@ -11,7 +11,6 @@ import java.util.List;
 public interface ITicketService {
     BuyTicketResponse createTicket(BuyTicketRequest buyTicketRequest);
     Ticket getTicketById(Long ticketId);
-    void markTicketAsUsed(Long ticketId);
     List<Ticket> getAllTickets();
     List<Ticket> getTicketsByEventId(String eventId);
 

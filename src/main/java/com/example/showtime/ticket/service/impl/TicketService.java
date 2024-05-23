@@ -151,13 +151,6 @@ public class TicketService implements ITicketService {
     }
 
     @Override
-    public void markTicketAsUsed(Long ticketId) {
-        Ticket ticket = getTicketById(ticketId);
-        ticket.setUsed(true);
-        ticketRepository.save(ticket);
-    }
-
-    @Override
     public List<Ticket> getAllTickets() {
         return ticketRepository.findAll();
     }
