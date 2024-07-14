@@ -23,7 +23,7 @@ public class TFAService implements ITFAService {
     private final IEmailService emailService;
 
     @Override
-    public String generateTfaSessionId(String email, int featureCode) {
+    public String generateTfaSessionId(String userName, String email, int featureCode) {
         GeneratedOtp generatedOtp = new GeneratedOtp();
 
         generatedOtp.setCreatedAt(Calendar.getInstance().getTime());
@@ -39,9 +39,12 @@ public class TFAService implements ITFAService {
 
         tfaRepository.save(generatedOtp);
 
-        String htmlContent = "<p style=\"font-size: 16px;\"><strong>Dear Customer</strong></p>"
-                + "<p>Your One Time Password is: <strong>" + generatedOtp.getOtp() + "</strong></p>"
-                + "<p>Regards,<br/>Relevant Bangladesh</p>";
+        String htmlContent = String.format(
+                "<p style=\"font-size: 16px;\"><strong>Dear %s</strong></p>"
+                        + "<p>Your One Time Password is: <strong>%s</strong></p>"
+                        + "<p>Regards,<br/>Relevant Bangladesh</p>",
+                userName, generatedOtp.getOtp()
+        );
 
         String subject = "OTP for " + FeatureEnum.fromValue(featureCode).getDescription();
 
