@@ -13,11 +13,14 @@ import com.example.showtime.user.repository.UserRepository;
 import com.example.showtime.user.service.imp.UserDetailsServiceImplementation;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -37,29 +40,41 @@ public class AuthService implements IAuthService {
 
     private final AdminRepository adminRepository;
 
+    private final PasswordEncoder passwordEncoder;
+
     private final JwtUtil jwtUtil;
 
     @Override
     public AuthResponse login(AuthRequest authRequest) {
-
         try {
             validateRequest(authRequest);
 
+            // Load user details
+            UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getEmail());
+
+            // Check if the password matches
+            if (!passwordEncoder.matches(authRequest.getPassword(), userDetails.getPassword())) {
+                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Invalid credentials");
+            }
+
+            // Authenticate the user
 //            authenticationManager.authenticate(
 //                    new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
 //            );
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getEmail());
+            // Generate JWT token
             String token = jwtUtil.generateToken(userDetails, authRequest.getUserRole());
 
+            // Return response with token
             return AuthResponse.builder()
                     .token(token)
                     .build();
 
-        } catch (AccessDeniedException e) {
-            throw new IllegalArgumentException("Unauthorized", e);
+        } catch (AuthenticationException e) {
+            throw new AccessDeniedException("Unauthorized", e);
         }
     }
+
 
     @Override
     public AuthResponse adminLogin(AuthRequest authRequest) {
@@ -100,6 +115,10 @@ public class AuthService implements IAuthService {
         if (authRequest.getUserRole() != userAccountOptional.get().getRole()) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "User role is not valid");
         }
+
+        if (!userAccountOptional.get().getIsOtpVerified()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "User is not verified. PLease sign up and verify your account first");
+        }
     }
 
     private void validateRequestForAdmin(AuthRequest authRequest) {
@@ -119,5 +138,10 @@ public class AuthService implements IAuthService {
         if (authRequest.getUserRole() != adminAccountOptional.get().getRole()) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "User role is not valid");
         }
+
+        //Check if password is correct
+//        if (!adminAccountOptional.get().getPassword().equals(authRequest.getPassword())) {
+//            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Password is not correct");
+//        }
     }
 }
