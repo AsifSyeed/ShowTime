@@ -63,6 +63,7 @@ public class EventService implements IEventService {
                         .eventId(event.getEventId())
                         .eventStartDate(String.valueOf(event.getEventStartDate()))
                         .eventEndDate(String.valueOf(event.getEventEndDate()))
+                        .eventImageUrl(event.getEventImageUrl())
                         .categoryList(categoryService.getAllCategoriesByEventId(event.getEventId()))
                         .build())
                 .collect(Collectors.toList());

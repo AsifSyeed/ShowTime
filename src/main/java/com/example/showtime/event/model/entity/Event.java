@@ -38,4 +38,7 @@ public class Event {
 
     @Column(name = "CREATED_BY")
     private String createdBy;
+
+    @Column(name = "EVENT_IMAGE_URL")
+    private String eventImageUrl;
 }

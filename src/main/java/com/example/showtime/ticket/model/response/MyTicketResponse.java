@@ -12,6 +12,7 @@ import lombok.Setter;
 public class MyTicketResponse {
     private String ticketId;
     private String eventName;
+    private String eventImageUrl;
     private String validityDate;
     private String ticketPrice;
     private String ticketOwnerName;

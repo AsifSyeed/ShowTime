@@ -96,6 +96,7 @@ public class TicketService implements ITicketService {
                     ticket.setTicketTransactionId(refId);
                     ticket.setTicketCreatedDate(Calendar.getInstance().getTime());
                     ticket.setEventId(selectedEvent.getEventId());
+                    ticket.setEventImageUrl(selectedEvent.getEventImageUrl());
                     ticket.setValidityDate(selectedEvent.getEventEndDate());
                     ticket.setTicketCategory(buyTicketRequest.getTicketCategory());
                     ticket.setTicketOwnerName(ticketOwnerInformation.get(i).getTicketOwnerName());
@@ -180,6 +181,7 @@ public class TicketService implements ITicketService {
         try {
 
             return ticketRepository.findByTicketCreatedByOrderByTicketCreatedDateDesc(createdBy.getEmail()).stream()
+                    .filter(ticket -> ticket.getTicketTransactionStatus() == TransactionStatusEnum.SUCCESS.getValue()) // Add this line to filter tickets
                     .map(ticket -> MyTicketResponse.builder()
                             .ticketId(ticket.getTicketId())
                             .eventName(ticket.getEventName())
@@ -189,9 +191,11 @@ public class TicketService implements ITicketService {
                             .ticketCategoryName(categoryService.getCategoryByIdAndEventId(ticket.getTicketCategory(), ticket.getEventId()).getCategoryName())
                             .ticketPrice(String.valueOf(ticket.getTicketPrice()))
                             .ticketStatus(ticket.isUsed())
+                            .eventImageUrl(ticket.getEventImageUrl())
                             .validityDate(String.valueOf(ticket.getValidityDate()))
                             .build())
                     .collect(Collectors.toList());
+
         } catch (AccessDeniedException e) {
             throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
         }

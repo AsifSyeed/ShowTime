@@ -58,6 +58,9 @@ public class Ticket {
     @Column(name = "EVENT_NAME")
     private String eventName;
 
+    @Column(name ="EVENT_IMAGE_URL")
+    private String eventImageUrl;
+
     @Column(name = "TICKET_TRANSACTION_STATUS")
     private int ticketTransactionStatus;
  }
