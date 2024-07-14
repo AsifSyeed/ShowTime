@@ -53,7 +53,7 @@ public class UserController {
     }
 
     @PostMapping("/generic-otp")
-    public ResponseEntity<ApiResponse<SignUpResponse>> sendGenericOtp(@RequestParam String emailId, int featureCode) {
+    public ResponseEntity<ApiResponse<SignUpResponse>> sendGenericOtp(@RequestParam String emailId, @RequestParam int featureCode) {
         SignUpResponse signUpResponse = iUserService.sendGenericOtp(emailId, featureCode);
 
         ApiResponse<SignUpResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "OTP sent successfully", signUpResponse);

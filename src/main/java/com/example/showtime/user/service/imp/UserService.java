@@ -1,6 +1,7 @@
 package com.example.showtime.user.service.imp;
 
 import com.example.showtime.common.exception.BaseException;
+import com.example.showtime.email.service.IEmailService;
 import com.example.showtime.tfa.enums.FeatureEnum;
 import com.example.showtime.tfa.model.request.TFAVerifyRequest;
 import com.example.showtime.tfa.service.ITFAService;
@@ -36,6 +37,7 @@ public class UserService implements IUserService {
     private final PasswordEncoder passwordEncoder;
 
     private final ITFAService tfaService;
+    private final IEmailService emailService;
 
     @Override
     public SignUpResponse signUpUser(SignUpRequest signUpRequest) {
@@ -115,11 +117,32 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
 
         userAccount.setIsOtpVerified(isOtpVerified(signUpTfaVerifyRequest.getEmail(), signUpTfaVerifyRequest.getTfaData()));
+        String htmlContent = String.format(
+                "<p style=\"font-size: 16px;\">Dear <strong>%s</strong>,</p>"
+                        + "<p>Thank you for confirming your account! Your registration is now complete, and you can start enjoying all the benefits of being a member of countersbd.com.</p>"
+                        + "<p>Here’s what you can do next:</p>"
+                        + "<ul>"
+                        + "  <li><a href=\"https://www.countersbd.com/auth/signin\">Log in to Your Account</a></li>"
+                        + "  <li><a href=\"https://www.countersbd.com/events\">Explore Our Events</a></li>"
+                        + "  <li><a href=\"https://www.countersbd.com/aboutus\">About Us</a></li>"
+                        + "</ul>"
+                        + "<p>If you have any questions or need assistance, our support team is here to help. Feel free to reach out to us at <a href=\"mailto:releventbangladesh@gmail.com\">releventbangladesh@gmail.com</a>.</p>"
+                        + "<p>Welcome once again, and we’re thrilled to have you with us!</p>"
+                        + "<p>Regards,</p>"
+                        + "<p>Relevent Bangladesh</p>",
+                userAccount.getFirstName() + " " + userAccount.getLastName()
+        );
+
         userRepository.save(userAccount);
+        sendEmail(userAccount.getEmail(), "Welcome to Counters BD", htmlContent);
     }
 
     private Boolean isOtpVerified(String email, TFAVerifyRequest tfaData) {
         return tfaService.verifyOtp(email, tfaData);
+    }
+
+    private void sendEmail(String emailId, String subject, String htmlContent) {
+        emailService.sendGenericEmail(emailId, subject, htmlContent);
     }
 
     @Override
@@ -164,6 +187,16 @@ public class UserService implements IUserService {
         if (isOtpVerified(forgetPasswordRequest.getEmail(), forgetPasswordRequest.getTfaData())) {
             userAccount.setPassword(passwordEncoder.encode(forgetPasswordRequest.getNewPassword()));
             userRepository.save(userAccount);
+
+            String htmlContent = String.format(
+                    "<p style=\"font-size: 16px;\">Dear <strong>%s</strong>,</p>"
+                            + "<p>Your password has been updated. If you have not performed this action, please contact us at <a href=\"mailto:releventbangladesh@gmail.com\">releventbangladesh@gmail.com</a>.</p>"
+                            + "<p>Regards,</p>"
+                            + "<p>Relevent Bangladesh</p>",
+                    userAccount.getFirstName() + " " + userAccount.getLastName()
+            );
+
+            sendEmail(userAccount.getEmail(), "Password Updated", htmlContent);
         }
     }
 
