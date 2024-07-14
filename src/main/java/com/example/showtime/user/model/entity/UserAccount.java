@@ -34,8 +34,11 @@ public class UserAccount {
     @Column(name = "PASSWORD")
     private String password;
 
-    @Column(name = "USER_FULL_NAME")
-    private String userFullName;
+    @Column(name = "FIRST_NAME")
+    private String firstName;
+
+    @Column(name = "LAST_NAME")
+    private String lastName;
 
     @Column(name = "IS_OTP_VERIFIED")
     private Boolean isOtpVerified;
