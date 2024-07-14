@@ -43,7 +43,7 @@ public class ParameterBuilder {
         postData.put("success_url", redirectBaseUrl + "/api/v1/transaction/ssl-redirect");
         postData.put("fail_url", redirectBaseUrl + "/api/v1/transaction/ssl-redirect");
         postData.put("cancel_url", redirectBaseUrl + "/api/v1/transaction/ssl-redirect");
-        postData.put("cus_name", createdBy.getUserFullName());
+        postData.put("cus_name", createdBy.getFirstName() + createdBy.getLastName());
         postData.put("cus_email", createdBy.getEmail());
         postData.put("cus_add1", "Address Line One");
         postData.put("cus_city", "Dhaka");
