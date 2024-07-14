@@ -64,17 +64,17 @@ public class UserService implements IUserService {
             userRepository.save(userAccount);
 
             return SignUpResponse.builder()
-                    .sessionId(getTfaSessionId(userAccount.getEmail(), FeatureEnum.SIGN_UP.getValue()))
+                    .sessionId(getTfaSessionId(userAccount.getFirstName() + " " + userAccount.getLastName(), userAccount.getEmail(), FeatureEnum.SIGN_UP.getValue()))
                     .build();
         } else {
             return SignUpResponse.builder()
-                    .sessionId(getTfaSessionId(existingUserAccount.getEmail(), FeatureEnum.SIGN_UP.getValue()))
+                    .sessionId(getTfaSessionId(existingUserAccount.getFirstName() + " " + existingUserAccount.getLastName(), existingUserAccount.getEmail(), FeatureEnum.SIGN_UP.getValue()))
                     .build();
         }
     }
 
-    private String getTfaSessionId(String email, int featureCode) {
-        return tfaService.generateTfaSessionId(email, featureCode);
+    private String getTfaSessionId(String userName, String email, int featureCode) {
+        return tfaService.generateTfaSessionId(userName, email, featureCode);
     }
 
     @Override
@@ -90,7 +90,8 @@ public class UserService implements IUserService {
                     .userName(userAccount.getUserName())
                     .emailId(userAccount.getEmail())
                     .phoneNumber(userAccount.getPhoneNumber())
-                    .userFullName(userAccount.getUserFullName())
+                    .userFullName(userAccount.getLastName())
+                    .userRole(userAccount.getRole())
                     .build();
         } catch (AccessDeniedException e) {
             throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
@@ -132,7 +133,7 @@ public class UserService implements IUserService {
                     .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
 
             return SignUpResponse.builder()
-                    .sessionId(getTfaSessionId(userAccount.getEmail(), featureCode))
+                    .sessionId(getTfaSessionId(userAccount.getFirstName() + " " + userAccount.getLastName(), userAccount.getEmail(), featureCode))
                     .build();
         } else {
             try {
@@ -144,7 +145,7 @@ public class UserService implements IUserService {
 
                 if (userAccount.getEmail().equals(emailId)) {
                     return SignUpResponse.builder()
-                            .sessionId(getTfaSessionId(userAccount.getEmail(), featureCode))
+                            .sessionId(getTfaSessionId(userAccount.getFirstName() + " " + userAccount.getLastName(), userAccount.getEmail(), featureCode))
                             .build();
                 } else {
                     throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Invalid request");
@@ -194,6 +195,8 @@ public class UserService implements IUserService {
                 StringUtils.isEmpty(signUpRequest.getPhoneNumber()) ||
                 StringUtils.isEmpty(signUpRequest.getPassword()) ||
                 StringUtils.isEmpty(signUpRequest.getUserName()) ||
+                StringUtils.isEmpty(signUpRequest.getFirstName()) ||
+                StringUtils.isEmpty(signUpRequest.getLastName()) ||
                 !isValidUserRole(signUpRequest.getUserRole())) {
 
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Request body is not valid");
@@ -208,7 +211,8 @@ public class UserService implements IUserService {
         userAccount.setEmail(signUpRequest.getEmail());
         userAccount.setPhoneNumber(signUpRequest.getPhoneNumber());
         userAccount.setRole(signUpRequest.getUserRole());
-        userAccount.setUserFullName(signUpRequest.getUserFullName());
+        userAccount.setFirstName(signUpRequest.getFirstName());
+        userAccount.setLastName(signUpRequest.getLastName());
         userAccount.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
         userAccount.setIsOtpVerified(false);
 

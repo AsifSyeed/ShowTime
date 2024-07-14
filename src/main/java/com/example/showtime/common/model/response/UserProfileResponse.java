@@ -14,4 +14,5 @@ public class UserProfileResponse {
     private String emailId;
     private String phoneNumber;
     private String userFullName;
+    private int userRole;
 }

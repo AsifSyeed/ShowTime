@@ -56,7 +56,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<SignUpResponse>> sendGenericOtp(@RequestParam String emailId, int featureCode) {
         SignUpResponse signUpResponse = iUserService.sendGenericOtp(emailId, featureCode);
 
-        ApiResponse<SignUpResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "OTP sent to your email", signUpResponse);
+        ApiResponse<SignUpResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "OTP sent successfully", signUpResponse);
 
         return ResponseEntity.ok(response);
     }
