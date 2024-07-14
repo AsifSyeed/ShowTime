@@ -268,6 +268,10 @@ public class TicketService implements ITicketService {
                 throw new BaseException(HttpStatus.NOT_FOUND.value(), "Ticket not found");
             }
 
+            if (ticket.getTicketTransactionStatus() != TransactionStatusEnum.SUCCESS.getValue()) {
+                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction not verified");
+            }
+
             if (ticket.isUsed()) {
                 throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket already used");
             }
