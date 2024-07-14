@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://3.109.34.237:5432/countersdb_prod
-    username: postgres
-    password: Relevant@2024
+    url: jdbc:postgresql://52.66.237.18:5432/db_prod
+    username: db_admin
+    password: db20240711
 
 sslcommerz:
   store:
