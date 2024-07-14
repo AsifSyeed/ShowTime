@@ -55,6 +55,7 @@ public class AdminService implements IAdminService {
                     .userName(admin.getAdminName())
                     .emailId(admin.getEmail())
                     .phoneNumber(admin.getPhoneNumber())
+                    .userRole(admin.getRole())
                     .build();
         } catch (AccessDeniedException e) {
             throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
