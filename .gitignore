@@ -34,3 +34,5 @@ build/
 
 ### Ticket ###
 src/main/resources/assets/tickets/
+data
+src/main/resources
