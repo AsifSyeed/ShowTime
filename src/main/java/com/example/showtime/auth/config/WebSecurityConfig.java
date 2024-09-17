@@ -48,6 +48,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             "/api/v1/user/verify",
             "/api/v1/user/generic-otp/**",
             "/api/v1/user/forget-password/verify",
+            "/api/v1/ticket/verify",
             "/v3/api-docs",
             "/v2/api-docs",
             "/swagger-resources/**",

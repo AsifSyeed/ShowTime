@@ -248,8 +248,15 @@ public class UserService implements IUserService {
         userAccount.setLastName(signUpRequest.getLastName());
         userAccount.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
         userAccount.setIsOtpVerified(false);
+        userAccount.setReferredBy(signUpRequest.getReferredBy());
+        userAccount.setReferralCode(generateReferralCode(userAccount));
 
         return userAccount;
+    }
+
+    private String generateReferralCode(UserAccount userAccount) {
+        // Generate referral code with the first 2 characters of the first name and the last 2 characters of the last name and 3 random numbers
+        return userAccount.getFirstName().substring(0, 2) + userAccount.getLastName().substring(userAccount.getLastName().length() - 2) + (int) (Math.random() * 900 + 100);
     }
 
     private boolean isEmailExists(String email) {

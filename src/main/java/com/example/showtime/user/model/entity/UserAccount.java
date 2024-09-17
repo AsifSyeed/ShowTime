@@ -42,4 +42,10 @@ public class UserAccount {
 
     @Column(name = "IS_OTP_VERIFIED")
     private Boolean isOtpVerified;
+
+    @Column(name = "REFERRAL_CODE")
+    private String referralCode;
+
+    @Column(name = "REFERRED_BY")
+    private String referredBy;
 }

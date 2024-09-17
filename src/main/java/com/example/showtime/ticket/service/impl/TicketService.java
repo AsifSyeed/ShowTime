@@ -96,7 +96,7 @@ public class TicketService implements ITicketService {
                     ticket.setTicketTransactionId(refId);
                     ticket.setTicketCreatedDate(Calendar.getInstance().getTime());
                     ticket.setEventId(selectedEvent.getEventId());
-                    ticket.setEventImageUrl(selectedEvent.getEventImageUrl());
+                    ticket.setEventImageUrl(selectedEvent.getEventThumbnailUrl());
                     ticket.setValidityDate(selectedEvent.getEventEndDate());
                     ticket.setTicketCategory(buyTicketRequest.getTicketCategory());
                     ticket.setTicketOwnerName(ticketOwnerInformation.get(i).getTicketOwnerName());
@@ -218,15 +218,15 @@ public class TicketService implements ITicketService {
     @Override
     public void verifyTicket(CheckTicketRequest checkTicketRequest) {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userRole = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .findFirst()
-                .orElse(null);
-
-        if (userRole == null || Integer.parseInt(userRole) != UserRole.ADMIN.getValue()) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "User not authorized to do the action");
-        }
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String userRole = authentication.getAuthorities().stream()
+//                .map(GrantedAuthority::getAuthority)
+//                .findFirst()
+//                .orElse(null);
+//
+//        if (userRole == null || Integer.parseInt(userRole) != UserRole.ADMIN.getValue()) {
+//            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "User not authorized to do the action");
+//        }
 
         if (checkTicketRequest.getTicketId().isEmpty()) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket id is required");

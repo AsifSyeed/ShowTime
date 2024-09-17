@@ -30,4 +30,7 @@ public class Category {
 
     @Column(name = "CATEGORY_AVAILABLE_COUNT")
     private Long categoryAvailableCount;
+
+    @Column(name = "MAXIMUM_QUANTITY")
+    private Long maximumQuantity;
 }

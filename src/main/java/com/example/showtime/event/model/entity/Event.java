@@ -39,6 +39,12 @@ public class Event {
     @Column(name = "CREATED_BY")
     private String createdBy;
 
-    @Column(name = "EVENT_IMAGE_URL")
-    private String eventImageUrl;
+    @Column(name = "EVENT_BANNER_URL")
+    private String eventBannerUrl;
+
+    @Column(name = "EVENT_THUMBNAIL_URL")
+    private String eventThumbnailUrl;
+
+    @Column(name = "EVENT_DESCRIPTION")
+    private String eventDescription;
 }

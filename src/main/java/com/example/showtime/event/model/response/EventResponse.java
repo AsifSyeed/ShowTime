@@ -19,6 +19,8 @@ public class EventResponse {
     private String eventId;
     private  String eventStartDate;
     private  String eventEndDate;
-    private String eventImageUrl;
+    private String eventBannerUrl;
+    private String eventThumbnailUrl;
     private List<Category> categoryList;
+    private String eventDescription;
 }

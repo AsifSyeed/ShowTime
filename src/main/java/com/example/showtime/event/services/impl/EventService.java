@@ -25,7 +25,6 @@ import org.springframework.security.core.GrantedAuthority;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -63,7 +62,9 @@ public class EventService implements IEventService {
                         .eventId(event.getEventId())
                         .eventStartDate(String.valueOf(event.getEventStartDate()))
                         .eventEndDate(String.valueOf(event.getEventEndDate()))
-                        .eventImageUrl(event.getEventImageUrl())
+                        .eventBannerUrl(event.getEventBannerUrl())
+                        .eventThumbnailUrl(event.getEventThumbnailUrl())
+                        .eventDescription(event.getEventDescription())
                         .categoryList(categoryService.getAllCategoriesByEventId(event.getEventId()))
                         .build())
                 .collect(Collectors.toList());
@@ -105,7 +106,7 @@ public class EventService implements IEventService {
         event.setEventEndDate(eventRequest.getEventEndDate());
         event.setEventCapacity(eventRequest.getEventCapacity());
         event.setEventAvailableCount(eventRequest.getEventCapacity());
-        event.setEventId(generateRandomString(eventRequest.getEventName()));
+        event.setEventId(generateEventId(eventRequest.getEventName()));
         event.setIsActive(getEventStatus(eventRequest.getEventEndDate()));
         event.setCreatedBy(createdBy.getEmail());
 
@@ -160,28 +161,10 @@ public class EventService implements IEventService {
         return totalCapacity;
     }
 
-    private String generateRandomString(String eventName) {
-        StringBuilder randomString = new StringBuilder();
-
-        // Split the event name by whitespace to get individual words
-        String[] words = eventName.split("\\s+");
-
-        // Iterate over each word and append its capitalized first letter to the random string
-        for (String word : words) {
-            if (!word.isEmpty()) {
-                randomString.append(Character.toUpperCase(word.charAt(0)));
-            }
-        }
-
-        // Calculate the number of remaining characters needed
-        int remainingCharacters = 10 - randomString.length();
-
-        // Generate random numbers to fill up the remaining characters
-        Random random = new Random();
-        for (int i = 0; i < remainingCharacters; i++) {
-            randomString.append(random.nextInt(10));
-        }
-
-        return randomString.toString();
+    private String generateEventId(String eventName) {
+        // concat all the characters of the event name
+        String eventId = eventName.replaceAll("\\s", "");
+        // return all the characters of the event name in lowercase
+        return eventId.toLowerCase();
     }
 }
