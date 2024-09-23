@@ -42,4 +42,11 @@ public class EventController {
 
         return ResponseEntity.ok(successResponse);
     }
+
+//    @GetMapping("/verify")
+//    public ResponseEntity<ApiResponse<?>> getEventTokenForVerify() {
+//        iEventService.getTokenForVerify();
+//        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Token created successfully", null);
+//        return ResponseEntity.ok(response);
+//    }
 }

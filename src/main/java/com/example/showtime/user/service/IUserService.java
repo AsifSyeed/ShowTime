@@ -1,5 +1,6 @@
 package com.example.showtime.user.service;
 
+import com.example.showtime.auth.model.response.AuthResponse;
 import com.example.showtime.user.model.entity.UserAccount;
 import com.example.showtime.user.model.request.ChangePasswordRequest;
 import com.example.showtime.user.model.request.ForgetPasswordRequest;
@@ -19,7 +20,7 @@ public interface IUserService {
 
     UserAccount getUserByEmail(String email);
 
-    void verifyUser(SignUpTfaVerifyRequest signUpTfaVerifyRequest);
+    AuthResponse verifyUser(SignUpTfaVerifyRequest signUpTfaVerifyRequest);
 
     SignUpResponse sendGenericOtp(String emailId, int featureCode);
 

@@ -1,5 +1,8 @@
 package com.example.showtime.user.service.imp;
 
+import com.example.showtime.auth.model.request.AuthRequest;
+import com.example.showtime.auth.model.response.AuthResponse;
+import com.example.showtime.auth.service.IAuthService;
 import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.email.service.IEmailService;
 import com.example.showtime.tfa.enums.FeatureEnum;
@@ -38,6 +41,7 @@ public class UserService implements IUserService {
 
     private final ITFAService tfaService;
     private final IEmailService emailService;
+    private final IAuthService authService;
 
     @Override
     public SignUpResponse signUpUser(SignUpRequest signUpRequest) {
@@ -92,7 +96,6 @@ public class UserService implements IUserService {
                     .userName(userAccount.getUserName())
                     .emailId(userAccount.getEmail())
                     .phoneNumber(userAccount.getPhoneNumber())
-                    .userFullName(userAccount.getLastName())
                     .userRole(userAccount.getRole())
                     .build();
         } catch (AccessDeniedException e) {
@@ -112,7 +115,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void verifyUser(SignUpTfaVerifyRequest signUpTfaVerifyRequest) {
+    public AuthResponse verifyUser(SignUpTfaVerifyRequest signUpTfaVerifyRequest) {
         UserAccount userAccount = userRepository.findByEmail(signUpTfaVerifyRequest.getEmail())
                 .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
 
@@ -135,6 +138,13 @@ public class UserService implements IUserService {
 
         userRepository.save(userAccount);
         sendEmail(userAccount.getEmail(), "Welcome to Counters BD", htmlContent);
+        AuthRequest authRequest = AuthRequest.builder()
+                .email(signUpTfaVerifyRequest.getEmail())
+                .password(userAccount.getPassword())
+                .userRole(userAccount.getRole())
+                .build();
+
+        return authService.login(authRequest);
     }
 
     private Boolean isOtpVerified(String email, TFAVerifyRequest tfaData) {

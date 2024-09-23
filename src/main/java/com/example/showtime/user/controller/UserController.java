@@ -1,5 +1,6 @@
 package com.example.showtime.user.controller;
 
+import com.example.showtime.auth.model.response.AuthResponse;
 import com.example.showtime.user.model.request.ChangePasswordRequest;
 import com.example.showtime.user.model.request.ForgetPasswordRequest;
 import com.example.showtime.user.model.request.SignUpRequest;
@@ -44,10 +45,11 @@ public class UserController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<ApiResponse<?>> verifyUser(@RequestBody @Valid SignUpTfaVerifyRequest signUpTfaVerifyRequest) {
-        iUserService.verifyUser(signUpTfaVerifyRequest);
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyUser(@RequestBody @Valid SignUpTfaVerifyRequest signUpTfaVerifyRequest) {
 
-        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "User verified successfully", null);
+        AuthResponse authResponse = iUserService.verifyUser(signUpTfaVerifyRequest);
+
+        ApiResponse<AuthResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "User verified successfully", authResponse);
 
         return ResponseEntity.ok(response);
     }

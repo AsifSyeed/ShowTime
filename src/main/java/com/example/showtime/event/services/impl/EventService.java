@@ -8,6 +8,7 @@ import com.example.showtime.event.model.request.EventRequest;
 import com.example.showtime.event.model.response.EventResponse;
 import com.example.showtime.event.repository.EventRepository;
 import com.example.showtime.event.services.IEventService;
+import com.example.showtime.referral.repository.ReferralRepository;
 import com.example.showtime.ticket.model.request.CategoryRequest;
 import com.example.showtime.ticket.service.ICategoryService;
 import com.example.showtime.user.enums.UserRole;
@@ -90,6 +91,11 @@ public class EventService implements IEventService {
         categoryService.updateAvailableTickets(categoryId, eventId, size);
 
         eventRepository.save(event);
+    }
+
+    @Override
+    public void getTokenForVerify() {
+
     }
 
     private Event prepareEventModel(EventRequest eventRequest) {

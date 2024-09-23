@@ -43,6 +43,7 @@ public class PdfGenerator {
                 addText(contentStream, ticket.getTicketOwnerName(), 450);
                 addText(contentStream, ticket.getTicketOwnerEmail(), 430);
                 addText(contentStream, ticket.getTicketOwnerNumber(), 410);
+                addText(contentStream, ticket.getTicketId(), 320);
 
                 String qrCodeData = ticket.getTicketId();
                 BufferedImage qrCodeImage;
@@ -63,7 +64,8 @@ public class PdfGenerator {
 
     private void setFontAndColor(PDPageContentStream contentStream) throws IOException {
         contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 18);
-        contentStream.setNonStrokingColor(1.0f, 1.0f, 1.0f); // RGB values for white
+        // set black
+        contentStream.setNonStrokingColor(0, 0, 0);
     }
 
     private void addText(PDPageContentStream contentStream, String text, float y) throws IOException {

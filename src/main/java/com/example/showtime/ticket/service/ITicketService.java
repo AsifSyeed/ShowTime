@@ -3,9 +3,11 @@ package com.example.showtime.ticket.service;
 import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.ticket.model.request.BuyTicketRequest;
 import com.example.showtime.ticket.model.request.CheckTicketRequest;
+import com.example.showtime.ticket.model.request.CreatePhysicalTicketRequest;
 import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import com.example.showtime.ticket.model.response.MyTicketResponse;
 
+import javax.validation.Valid;
 import java.util.List;
 
 public interface ITicketService {
@@ -25,4 +27,6 @@ public interface ITicketService {
     void verifyTicket(CheckTicketRequest checkTicketRequest);
 
     void sendEmail(String ticketId);
+
+    void createPhysicalTicket(CreatePhysicalTicketRequest physicalTicketRequest);
 }

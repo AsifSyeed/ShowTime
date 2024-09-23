@@ -1,7 +1,10 @@
 package com.example.showtime.ticket.service.impl;
 
+import com.example.showtime.referral.model.entity.Referral;
+import com.example.showtime.referral.service.IReferralService;
 import com.example.showtime.ticket.model.entity.Category;
 import com.example.showtime.ticket.model.request.CategoryRequest;
+import com.example.showtime.ticket.model.response.EventCategoryResponse;
 import com.example.showtime.ticket.repository.CategoryRepository;
 import com.example.showtime.ticket.service.ICategoryService;
 import lombok.RequiredArgsConstructor;
@@ -10,12 +13,14 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CategoryService implements ICategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final IReferralService referralService;
 
     @Override
     public Category getCategoryById(Long categoryId) {
@@ -34,8 +39,23 @@ public class CategoryService implements ICategoryService {
     }
 
     @Override
-    public List<Category> getAllCategoriesByEventId(String eventId) {
-        return categoryRepository.findByEventIdOrderByCategoryPriceDesc(eventId);
+    public List<EventCategoryResponse> getAllCategoriesByEventId(String eventId) {
+        return categoryRepository.findAllByEventId(eventId).stream()
+                .map(category -> EventCategoryResponse.builder()
+                        .categoryId(category.getCategoryId())
+                        .categoryName(category.getCategoryName())
+                        .categoryPrice(category.getCategoryPrice())
+                        .categoryCapacity(category.getCategoryCapacity())
+                        .categoryAvailableCount(category.getCategoryAvailableCount())
+                        .discountedPrice(category.getCategoryPrice() - getDefaultDiscount(eventId))
+                        .maximumQuantity(category.getMaximumQuantity())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private Double getDefaultDiscount(String eventId) {
+        Referral defaultReferral = referralService.getDefaultReferral(eventId);
+        return defaultReferral != null ? defaultReferral.getReferralDiscount() : 0.0;
     }
 
     @Override

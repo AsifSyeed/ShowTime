@@ -13,6 +13,7 @@ public class UserProfileResponse {
     private String userName;
     private String emailId;
     private String phoneNumber;
-    private String userFullName;
+    private String userFirstName;
+    private String userLastName;
     private int userRole;
 }

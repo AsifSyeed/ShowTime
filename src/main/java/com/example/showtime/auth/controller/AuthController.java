@@ -18,6 +18,7 @@ import javax.validation.Valid;
 public class AuthController {
 
     private final IAuthService authService;
+
     @PostMapping("/token")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody @Valid AuthRequest authRequest) {
 

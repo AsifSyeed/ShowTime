@@ -63,4 +63,7 @@ public class Ticket {
 
     @Column(name = "TICKET_TRANSACTION_STATUS")
     private int ticketTransactionStatus;
+
+    @Column(name = "APPLIED_COUPON")
+    private String appliedCoupon;
  }

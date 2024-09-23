@@ -3,6 +3,7 @@ package com.example.showtime.ticket.controller;
 import com.example.showtime.common.model.response.ApiResponse;
 import com.example.showtime.ticket.model.request.BuyTicketRequest;
 import com.example.showtime.ticket.model.request.CheckTicketRequest;
+import com.example.showtime.ticket.model.request.CreatePhysicalTicketRequest;
 import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import com.example.showtime.ticket.model.response.MyTicketResponse;
 import com.example.showtime.ticket.service.ITicketService;
@@ -31,6 +32,7 @@ public class TicketController {
         return ResponseEntity.ok(response);
     }
 
+
     @GetMapping("/my-tickets")
     public ResponseEntity<ApiResponse<List<MyTicketResponse>>> getMyTickets() {
         List<MyTicketResponse> myTicketResponses = ticketService.getMyTickets();
@@ -55,6 +57,13 @@ public class TicketController {
 
         ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Email sent successfully", null);
 
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/create-physical-ticket")
+    public ResponseEntity<ApiResponse<?>> createPhysicalTicket(@RequestBody @Valid CreatePhysicalTicketRequest createPhysicalTicketRequest) {
+        ticketService.createPhysicalTicket(createPhysicalTicketRequest);
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Physical ticket created successfully", null);
         return ResponseEntity.ok(response);
     }
 }

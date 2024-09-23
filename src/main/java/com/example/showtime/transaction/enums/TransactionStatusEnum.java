@@ -15,5 +15,4 @@ public enum TransactionStatusEnum {
     TransactionStatusEnum(int value) {
         this.value = value;
     }
-
 }

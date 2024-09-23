@@ -1,5 +1,6 @@
 package com.example.showtime.ticket.service.impl;
 
+import com.example.showtime.admin.repository.AdminRepository;
 import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.common.uniqueId.UniqueIdGenerator;
 import com.example.showtime.email.service.IEmailService;
@@ -9,11 +10,13 @@ import com.example.showtime.ticket.model.entity.Category;
 import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.ticket.model.request.BuyTicketRequest;
 import com.example.showtime.ticket.model.request.CheckTicketRequest;
+import com.example.showtime.ticket.model.request.CreatePhysicalTicketRequest;
 import com.example.showtime.ticket.model.request.TicketOwnerInformationRequest;
 import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import com.example.showtime.ticket.model.response.MyTicketResponse;
 import com.example.showtime.ticket.repository.TicketRepository;
 import com.example.showtime.ticket.service.ICategoryService;
+import com.example.showtime.ticket.service.IPhysicalTicketService;
 import com.example.showtime.ticket.service.ITicketService;
 import com.example.showtime.transaction.enums.TransactionStatusEnum;
 import com.example.showtime.transaction.ssl.SSLTransactionInitiator;
@@ -32,6 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.Valid;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Objects;
@@ -49,7 +53,9 @@ public class TicketService implements ITicketService {
     private final ICategoryService categoryService;
     private final SSLTransactionInitiator sslTransactionInitiator;
     private final IEmailService emailService;
+    private final IPhysicalTicketService physicalTicketService;
     private final UniqueIdGenerator uniqueIdGenerator;
+    private final AdminRepository adminRepository;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -88,7 +94,13 @@ public class TicketService implements ITicketService {
                 .parallel()
                 .mapToObj(i -> {
                     Ticket ticket = new Ticket();
-                    ticket.setTicketId(uniqueIdGenerator.generateUniqueId(selectedEvent.getEventId()));
+
+                    if (buyTicketRequest.getCouponCode().isEmpty()) {
+                        ticket.setTicketId(uniqueIdGenerator.generateUniqueId(selectedEvent.getEventId()));
+                    } else {
+                        ticket.setTicketId(uniqueIdGenerator.generateUniqueId(buyTicketRequest.getCouponCode()));
+                    }
+
                     ticket.setEventName(selectedEvent.getEventName());
                     ticket.setTicketTransactionStatus(TransactionStatusEnum.INITIATED.getValue());
                     ticket.setUsed(false);
@@ -104,6 +116,7 @@ public class TicketService implements ITicketService {
                     ticket.setTicketOwnerNumber(ticketOwnerInformation.get(i).getTicketOwnerNumber());
                     ticket.setTicketCreatedBy(createdBy.getEmail());
                     ticket.setTicketPrice(categoryService.getTicketPrice(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId()));
+                    ticket.setAppliedCoupon(buyTicketRequest.getCouponCode());
 
                     return ticket;
                 })
@@ -112,7 +125,7 @@ public class TicketService implements ITicketService {
         eventService.updateAvailableTickets(selectedEvent.getEventId(), buyTicketRequest.getTicketCategory(), newTickets.size());
 
         ticketRepository.saveAll(newTickets);
-        return Pair.of(refId, newTickets.stream().mapToDouble(Ticket::getTicketPrice).sum());
+        return Pair.of(refId, buyTicketRequest.getTotalPrice());
     }
 
     private void validateRequest(BuyTicketRequest buyTicketRequest) {
@@ -282,6 +295,32 @@ public class TicketService implements ITicketService {
         } catch (AccessDeniedException e) {
             throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
         }
+    }
+
+    @Override
+    public void createPhysicalTicket(CreatePhysicalTicketRequest physicalTicketRequest) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .orElse(null);
+
+        if (userRole == null || Integer.parseInt(userRole) != UserRole.ADMIN.getValue()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "You are not authorized to create physical ticket");
+        }
+
+        if (Objects.isNull(physicalTicketRequest) ||
+                StringUtils.isEmpty(physicalTicketRequest.getEventId())) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Request body is not valid");
+        }
+
+        Event selectedEvent = eventService.getEventById(physicalTicketRequest.getEventId());
+
+        if (selectedEvent == null) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event not found");
+        }
+
+        physicalTicketService.savePhysicalTicket(physicalTicketRequest);
     }
 
     private Ticket getTicketByUserAndTicketId(UserAccount createdBy, String ticketId) {

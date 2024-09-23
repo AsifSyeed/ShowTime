@@ -82,6 +82,9 @@ public class AdminService implements IAdminService {
                         .userName(userAccount.getUserName())
                         .emailId(userAccount.getEmail())
                         .phoneNumber(userAccount.getPhoneNumber())
+                        .userRole(userAccount.getRole())
+                        .userFirstName(userAccount.getFirstName())
+                        .userLastName(userAccount.getLastName())
                         .build())
                 .collect(Collectors.toList());
     }
