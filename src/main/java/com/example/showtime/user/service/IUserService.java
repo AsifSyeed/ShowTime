@@ -12,15 +12,13 @@ import com.example.showtime.user.model.response.SignUpResponse;
 import java.util.List;
 
 public interface IUserService {
-    SignUpResponse signUpUser(SignUpRequest signUpRequest);
+    AuthResponse signUpUser(SignUpRequest signUpRequest);
 
     UserProfileResponse getUserProfile();
 
     List<UserAccount> getUserList();
 
     UserAccount getUserByEmail(String email);
-
-    AuthResponse verifyUser(SignUpTfaVerifyRequest signUpTfaVerifyRequest);
 
     SignUpResponse sendGenericOtp(String emailId, int featureCode);
 

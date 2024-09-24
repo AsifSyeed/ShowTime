@@ -6,12 +6,11 @@ import com.example.showtime.common.uniqueId.UniqueIdGenerator;
 import com.example.showtime.email.service.IEmailService;
 import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.services.IEventService;
+import com.example.showtime.ticket.enums.TicketTypeEnum;
 import com.example.showtime.ticket.model.entity.Category;
+import com.example.showtime.ticket.model.entity.PhysicalTicket;
 import com.example.showtime.ticket.model.entity.Ticket;
-import com.example.showtime.ticket.model.request.BuyTicketRequest;
-import com.example.showtime.ticket.model.request.CheckTicketRequest;
-import com.example.showtime.ticket.model.request.CreatePhysicalTicketRequest;
-import com.example.showtime.ticket.model.request.TicketOwnerInformationRequest;
+import com.example.showtime.ticket.model.request.*;
 import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import com.example.showtime.ticket.model.response.MyTicketResponse;
 import com.example.showtime.ticket.repository.TicketRepository;
@@ -117,6 +116,7 @@ public class TicketService implements ITicketService {
                     ticket.setTicketCreatedBy(createdBy.getEmail());
                     ticket.setTicketPrice(categoryService.getTicketPrice(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId()));
                     ticket.setAppliedCoupon(buyTicketRequest.getCouponCode());
+                    ticket.setTicketType(TicketTypeEnum.ONLINE.getValue());
 
                     return ticket;
                 })
@@ -255,6 +255,10 @@ public class TicketService implements ITicketService {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket already used");
         }
 
+        if (ticket.getTicketType() != TicketTypeEnum.ONLINE.getValue()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Online ticket is not valid");
+        }
+
         if (ticket.getTicketTransactionStatus() != TransactionStatusEnum.SUCCESS.getValue()) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket not verified");
         }
@@ -289,6 +293,10 @@ public class TicketService implements ITicketService {
                 throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Ticket already used");
             }
 
+            if (ticket.getTicketType() != TicketTypeEnum.ONLINE.getValue()) {
+                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Online ticket is not valid");
+            }
+
             List<Ticket> selectedTickets = List.of(ticket);
             sendEmailToCustomer(selectedTickets);
 
@@ -321,6 +329,43 @@ public class TicketService implements ITicketService {
         }
 
         physicalTicketService.savePhysicalTicket(physicalTicketRequest);
+    }
+
+    @Override
+    public void tagPhysicalTicket(TagPhysicalTicketRequest tagPhysicalTicketRequest) {
+        if (Objects.isNull(tagPhysicalTicketRequest) ||
+                StringUtils.isEmpty(tagPhysicalTicketRequest.getPhysicalTicketId()) ||
+                StringUtils.isEmpty(tagPhysicalTicketRequest.getOnlineTicketId())) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Request body is not valid");
+        }
+
+        Ticket ticket = getTicketByTicketId(tagPhysicalTicketRequest.getOnlineTicketId());
+        PhysicalTicket physicalTicket = physicalTicketService.getPhysicalTicketById(tagPhysicalTicketRequest.getPhysicalTicketId());
+
+        if (ticket == null) {
+            throw new BaseException(HttpStatus.NOT_FOUND.value(), "Online Ticket not found");
+        }
+
+        if (ticket.isUsed()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Online Ticket already used");
+        }
+
+        if (physicalTicket == null) {
+            throw new BaseException(HttpStatus.NOT_FOUND.value(), "Physical Ticket not found");
+        }
+
+        if (ticket.getTicketType() != TicketTypeEnum.ONLINE.getValue()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Physical Ticket already tagged");
+        }
+
+        ticket.setTicketType(TicketTypeEnum.PHYSICAL.getValue());
+        ticketRepository.save(ticket);
+
+        physicalTicket.setOnlineTicketId(tagPhysicalTicketRequest.getOnlineTicketId());
+        physicalTicket.setTicketOwnerEmail(ticket.getTicketOwnerEmail());
+        physicalTicket.setTicketOwnerName(ticket.getTicketOwnerName());
+        physicalTicket.setTicketOwnerNumber(ticket.getTicketOwnerNumber());
+        physicalTicketService.updatePhysicalTicket(physicalTicket);
     }
 
     private Ticket getTicketByUserAndTicketId(UserAccount createdBy, String ticketId) {

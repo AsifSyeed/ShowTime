@@ -66,4 +66,7 @@ public class Ticket {
 
     @Column(name = "APPLIED_COUPON")
     private String appliedCoupon;
+
+    @Column(name = "TICKET_TYPE")
+    private int ticketType;
  }

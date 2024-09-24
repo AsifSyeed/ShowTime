@@ -1,11 +1,10 @@
 package com.example.showtime.ticket.controller;
 
 import com.example.showtime.common.model.response.ApiResponse;
-import com.example.showtime.ticket.model.request.BuyTicketRequest;
-import com.example.showtime.ticket.model.request.CheckTicketRequest;
-import com.example.showtime.ticket.model.request.CreatePhysicalTicketRequest;
+import com.example.showtime.ticket.model.request.*;
 import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import com.example.showtime.ticket.model.response.MyTicketResponse;
+import com.example.showtime.ticket.service.IPhysicalTicketService;
 import com.example.showtime.ticket.service.ITicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +20,7 @@ import java.util.List;
 @RequestMapping("/api/v1/ticket")
 public class TicketController {
     private final ITicketService ticketService;
+    private final IPhysicalTicketService physicalTicketService;
 
     @PostMapping("/buy")
     public ResponseEntity<ApiResponse<BuyTicketResponse>> buyTicket(@RequestBody @Valid BuyTicketRequest buyTicketRequest) {
@@ -64,6 +64,20 @@ public class TicketController {
     public ResponseEntity<ApiResponse<?>> createPhysicalTicket(@RequestBody @Valid CreatePhysicalTicketRequest createPhysicalTicketRequest) {
         ticketService.createPhysicalTicket(createPhysicalTicketRequest);
         ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Physical ticket created successfully", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/tag-physical-ticket")
+    public ResponseEntity<ApiResponse<?>> tagPhysicalTicket(@RequestBody @Valid TagPhysicalTicketRequest tagPhysicalTicketRequest) {
+        ticketService.tagPhysicalTicket(tagPhysicalTicketRequest);
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Physical ticket tagged successfully", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/sell-physical-ticket")
+    public ResponseEntity<ApiResponse<?>> sellPhysicalTicket(@RequestBody @Valid SellPhysicalTicketRequest sellPhysicalTicketRequest) {
+        physicalTicketService.sellPhysicalTicket(sellPhysicalTicketRequest);
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Physical ticket sold successfully", null);
         return ResponseEntity.ok(response);
     }
 }

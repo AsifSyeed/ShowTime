@@ -11,4 +11,5 @@ import lombok.Setter;
 @Builder
 public class SignUpResponse {
     private String sessionId;
+    private String userToken;
 }

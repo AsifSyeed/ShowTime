@@ -94,8 +94,21 @@ public class EventService implements IEventService {
     }
 
     @Override
-    public void getTokenForVerify() {
+    public EventResponse checkEventToVerify(String eventId) {
+        Event event = getEventById(eventId);
 
+        return EventResponse.builder()
+                .eventName(event.getEventName())
+                .eventCapacity(event.getEventCapacity())
+                .eventAvailableTickets(event.getEventAvailableCount())
+                .eventId(event.getEventId())
+                .eventStartDate(String.valueOf(event.getEventStartDate()))
+                .eventEndDate(String.valueOf(event.getEventEndDate()))
+                .eventBannerUrl(event.getEventBannerUrl())
+                .eventThumbnailUrl(event.getEventThumbnailUrl())
+                .eventDescription(event.getEventDescription())
+                .categoryList(categoryService.getAllCategoriesByEventId(event.getEventId()))
+                .build();
     }
 
     private Event prepareEventModel(EventRequest eventRequest) {

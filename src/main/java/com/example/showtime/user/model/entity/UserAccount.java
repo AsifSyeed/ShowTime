@@ -40,9 +40,6 @@ public class UserAccount {
     @Column(name = "LAST_NAME")
     private String lastName;
 
-    @Column(name = "IS_OTP_VERIFIED")
-    private Boolean isOtpVerified;
-
     @Column(name = "REFERRAL_CODE")
     private String referralCode;
 

@@ -2,10 +2,12 @@ package com.example.showtime.ticket.service.impl;
 
 import com.example.showtime.ticket.model.entity.PhysicalTicket;
 import com.example.showtime.ticket.model.request.CreatePhysicalTicketRequest;
+import com.example.showtime.ticket.model.request.SellPhysicalTicketRequest;
 import com.example.showtime.ticket.repository.PhysicalTicketRepository;
 import com.example.showtime.ticket.service.IPhysicalTicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import java.util.List;
 
@@ -49,5 +51,51 @@ public class PhysicalTicketService implements IPhysicalTicketService {
     @Override
     public void usePhysicalTicket(String physicalTicketId) {
 
+    }
+
+    @Override
+    public PhysicalTicket getPhysicalTicketById(String physicalTicketId) {
+        return physicalTicketRepository.findByPhysicalTicketId(physicalTicketId);
+    }
+
+    @Override
+    public void updatePhysicalTicket(PhysicalTicket physicalTicket) {
+        physicalTicketRepository.save(physicalTicket);
+    }
+
+    @Override
+    public void sellPhysicalTicket(SellPhysicalTicketRequest sellPhysicalTicketRequest) {
+        if (ObjectUtils.isEmpty(sellPhysicalTicketRequest.getPhysicalTicketId())) {
+            throw new RuntimeException("Physical ticket id is required");
+        }
+
+        if (ObjectUtils.isEmpty(sellPhysicalTicketRequest.getEventId())) {
+            throw new RuntimeException("Event id is required");
+        }
+
+        if (ObjectUtils.isEmpty(sellPhysicalTicketRequest.getTicketOwnerName())) {
+            throw new RuntimeException("Ticket owner name is required");
+        }
+
+        if (ObjectUtils.isEmpty(sellPhysicalTicketRequest.getTicketOwnerNumber())) {
+            throw new RuntimeException("Ticket owner number is required");
+        }
+
+        if (ObjectUtils.isEmpty(sellPhysicalTicketRequest.getTicketOwnerEmail())) {
+            throw new RuntimeException("Ticket owner email is required");
+        }
+
+        PhysicalTicket physicalTicket = physicalTicketRepository.findByPhysicalTicketIdAndEventId(sellPhysicalTicketRequest.getPhysicalTicketId(), sellPhysicalTicketRequest.getEventId());
+
+        if (ObjectUtils.isEmpty(physicalTicket)) {
+            throw new RuntimeException("Physical ticket not found");
+        }
+
+        physicalTicket.setTicketOwnerName(sellPhysicalTicketRequest.getTicketOwnerName());
+        physicalTicket.setTicketOwnerNumber(sellPhysicalTicketRequest.getTicketOwnerNumber());
+        physicalTicket.setTicketOwnerEmail(sellPhysicalTicketRequest.getTicketOwnerEmail());
+        physicalTicket.setActive(true);
+
+        physicalTicketRepository.save(physicalTicket);
     }
 }

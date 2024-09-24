@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
 
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001", "https://www.countersbd.com", "https://admin.countersbd.com"}, maxAge = 3600)
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001", "https://www.countersbd.com", "https://admin.countersbd.com", "https://checker.countersbd.com"}, maxAge = 3600)
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/event")
@@ -43,10 +43,10 @@ public class EventController {
         return ResponseEntity.ok(successResponse);
     }
 
-//    @GetMapping("/verify")
-//    public ResponseEntity<ApiResponse<?>> getEventTokenForVerify() {
-//        iEventService.getTokenForVerify();
-//        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Token created successfully", null);
-//        return ResponseEntity.ok(response);
-//    }
+    @GetMapping("/verify-for-scanner")
+    public ResponseEntity<ApiResponse<EventResponse>> checkEventToVerify(@RequestParam String eventId) {
+        EventResponse eventResponse = iEventService.checkEventToVerify(eventId);
+        ApiResponse<EventResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Event retrieved successfully!", eventResponse);
+        return ResponseEntity.ok(response);
+    }
 }

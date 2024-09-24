@@ -26,4 +26,16 @@ public class PhysicalTicket {
 
     @Column(name = "IS_ACTIVE")
     private boolean isActive;
+
+    @Column(name = "ONLINE_TICKET_ID")
+    private String onlineTicketId;
+
+    @Column(name = "TICKET_OWNER_NAME")
+    private String ticketOwnerName;
+
+    @Column(name = "TICKET_OWNER_NUMBER")
+    private String ticketOwnerNumber;
+
+    @Column(name = "TICKET_OWNER_EMAIL")
+    private String ticketOwnerEmail;
 }

@@ -4,6 +4,7 @@ import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.ticket.model.request.BuyTicketRequest;
 import com.example.showtime.ticket.model.request.CheckTicketRequest;
 import com.example.showtime.ticket.model.request.CreatePhysicalTicketRequest;
+import com.example.showtime.ticket.model.request.TagPhysicalTicketRequest;
 import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import com.example.showtime.ticket.model.response.MyTicketResponse;
 
@@ -29,4 +30,6 @@ public interface ITicketService {
     void sendEmail(String ticketId);
 
     void createPhysicalTicket(CreatePhysicalTicketRequest physicalTicketRequest);
+
+    void tagPhysicalTicket(TagPhysicalTicketRequest tagPhysicalTicketRequest);
 }

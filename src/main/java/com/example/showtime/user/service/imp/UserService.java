@@ -44,39 +44,44 @@ public class UserService implements IUserService {
     private final IAuthService authService;
 
     @Override
-    public SignUpResponse signUpUser(SignUpRequest signUpRequest) {
+    public AuthResponse signUpUser(SignUpRequest signUpRequest) {
 
         validateRequest(signUpRequest);
 
-        UserAccount existingUserAccount = userRepository.findByEmail(signUpRequest.getEmail()).orElse(null);
-
-        if (Objects.nonNull(existingUserAccount) && existingUserAccount.getIsOtpVerified()) {
-            if (isEmailExists(signUpRequest.getEmail())) {
-                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Email already used");
-            }
-
-            if (isUserNameExists(signUpRequest.getUserName())) {
-                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Username already used");
-            }
-
-            if (isPhoneNumberExists(signUpRequest.getPhoneNumber())) {
-                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Phone Number already used");
-            }
+        if (isEmailExists(signUpRequest.getEmail())) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Email already used");
         }
 
-        if (existingUserAccount == null) {
-            UserAccount userAccount = prepareUserModel(signUpRequest);
-
-            userRepository.save(userAccount);
-
-            return SignUpResponse.builder()
-                    .sessionId(getTfaSessionId(userAccount.getFirstName() + " " + userAccount.getLastName(), userAccount.getEmail(), FeatureEnum.SIGN_UP.getValue()))
-                    .build();
-        } else {
-            return SignUpResponse.builder()
-                    .sessionId(getTfaSessionId(existingUserAccount.getFirstName() + " " + existingUserAccount.getLastName(), existingUserAccount.getEmail(), FeatureEnum.SIGN_UP.getValue()))
-                    .build();
+        if (isUserNameExists(signUpRequest.getUserName())) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Username already used");
         }
+
+        if (isPhoneNumberExists(signUpRequest.getPhoneNumber())) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Phone Number already used");
+        }
+
+        UserAccount userAccount = prepareUserModel(signUpRequest);
+
+        String htmlContent = String.format(
+                "<p style=\"font-size: 16px;\">Dear <strong>%s</strong>,</p>"
+                        + "<p>Thank you for confirming your account! Your registration is now complete, and you can start enjoying all the benefits of being a member of countersbd.com.</p>"
+                        + "<p>Here’s what you can do next:</p>"
+                        + "<ul>"
+                        + "  <li><a href=\"https://www.countersbd.com/auth/signin\">Log in to Your Account</a></li>"
+                        + "  <li><a href=\"https://www.countersbd.com/events\">Explore Our Events</a></li>"
+                        + "  <li><a href=\"https://www.countersbd.com/aboutus\">About Us</a></li>"
+                        + "</ul>"
+                        + "<p>If you have any questions or need assistance, our support team is here to help. Feel free to reach out to us at <a href=\"mailto:releventbangladesh@gmail.com\">releventbangladesh@gmail.com</a>.</p>"
+                        + "<p>Welcome once again, and we’re thrilled to have you with us!</p>"
+                        + "<p>Regards,</p>"
+                        + "<p>Relevent Bangladesh</p>",
+                userAccount.getFirstName() + " " + userAccount.getLastName()
+        );
+
+        userRepository.save(userAccount);
+        sendEmail(userAccount.getEmail(), "Welcome to Counters BD", htmlContent);
+
+        return authService.login(AuthRequest.builder().email(signUpRequest.getEmail()).password(signUpRequest.getPassword()).userRole(signUpRequest.getUserRole()).build());
     }
 
     private String getTfaSessionId(String userName, String email, int featureCode) {
@@ -112,39 +117,6 @@ public class UserService implements IUserService {
     public UserAccount getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
-    }
-
-    @Override
-    public AuthResponse verifyUser(SignUpTfaVerifyRequest signUpTfaVerifyRequest) {
-        UserAccount userAccount = userRepository.findByEmail(signUpTfaVerifyRequest.getEmail())
-                .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found"));
-
-        userAccount.setIsOtpVerified(isOtpVerified(signUpTfaVerifyRequest.getEmail(), signUpTfaVerifyRequest.getTfaData()));
-        String htmlContent = String.format(
-                "<p style=\"font-size: 16px;\">Dear <strong>%s</strong>,</p>"
-                        + "<p>Thank you for confirming your account! Your registration is now complete, and you can start enjoying all the benefits of being a member of countersbd.com.</p>"
-                        + "<p>Here’s what you can do next:</p>"
-                        + "<ul>"
-                        + "  <li><a href=\"https://www.countersbd.com/auth/signin\">Log in to Your Account</a></li>"
-                        + "  <li><a href=\"https://www.countersbd.com/events\">Explore Our Events</a></li>"
-                        + "  <li><a href=\"https://www.countersbd.com/aboutus\">About Us</a></li>"
-                        + "</ul>"
-                        + "<p>If you have any questions or need assistance, our support team is here to help. Feel free to reach out to us at <a href=\"mailto:releventbangladesh@gmail.com\">releventbangladesh@gmail.com</a>.</p>"
-                        + "<p>Welcome once again, and we’re thrilled to have you with us!</p>"
-                        + "<p>Regards,</p>"
-                        + "<p>Relevent Bangladesh</p>",
-                userAccount.getFirstName() + " " + userAccount.getLastName()
-        );
-
-        userRepository.save(userAccount);
-        sendEmail(userAccount.getEmail(), "Welcome to Counters BD", htmlContent);
-        AuthRequest authRequest = AuthRequest.builder()
-                .email(signUpTfaVerifyRequest.getEmail())
-                .password(userAccount.getPassword())
-                .userRole(userAccount.getRole())
-                .build();
-
-        return authService.login(authRequest);
     }
 
     private Boolean isOtpVerified(String email, TFAVerifyRequest tfaData) {
@@ -257,7 +229,6 @@ public class UserService implements IUserService {
         userAccount.setFirstName(signUpRequest.getFirstName());
         userAccount.setLastName(signUpRequest.getLastName());
         userAccount.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
-        userAccount.setIsOtpVerified(false);
         userAccount.setReferredBy(signUpRequest.getReferredBy());
         userAccount.setReferralCode(generateReferralCode(userAccount));
 

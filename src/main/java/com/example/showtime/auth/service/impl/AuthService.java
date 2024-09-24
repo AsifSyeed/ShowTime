@@ -115,10 +115,6 @@ public class AuthService implements IAuthService {
         if (authRequest.getUserRole() != userAccountOptional.get().getRole()) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "User role is not valid");
         }
-
-        if (!userAccountOptional.get().getIsOtpVerified()) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "User is not verified. PLease sign up and verify your account first");
-        }
     }
 
     private void validateRequestForAdmin(AuthRequest authRequest) {

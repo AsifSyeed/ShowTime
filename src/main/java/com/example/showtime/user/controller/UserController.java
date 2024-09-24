@@ -25,11 +25,11 @@ public class UserController {
     private final IUserService iUserService;
 
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<SignUpResponse>> signUpUser(@RequestBody @Valid SignUpRequest signUpRequest) {
+    public ResponseEntity<ApiResponse<AuthResponse>> signUpUser(@RequestBody @Valid SignUpRequest signUpRequest) {
 
-        SignUpResponse signUpResponse = iUserService.signUpUser(signUpRequest);
+        AuthResponse signUpResponse = iUserService.signUpUser(signUpRequest);
 
-        ApiResponse<SignUpResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Operation Successful", signUpResponse);
+        ApiResponse<AuthResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Operation Successful", signUpResponse);
 
         return ResponseEntity.ok(response);
     }
@@ -40,16 +40,6 @@ public class UserController {
         UserProfileResponse userProfileResponse = iUserService.getUserProfile();
 
         ApiResponse<UserProfileResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "User profile fetched successfully", userProfileResponse);
-
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/verify")
-    public ResponseEntity<ApiResponse<AuthResponse>> verifyUser(@RequestBody @Valid SignUpTfaVerifyRequest signUpTfaVerifyRequest) {
-
-        AuthResponse authResponse = iUserService.verifyUser(signUpTfaVerifyRequest);
-
-        ApiResponse<AuthResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "User verified successfully", authResponse);
 
         return ResponseEntity.ok(response);
     }

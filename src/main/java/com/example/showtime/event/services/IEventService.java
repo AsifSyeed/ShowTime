@@ -17,5 +17,5 @@ public interface IEventService {
 
     void updateAvailableTickets(String eventId, long categoryId, long size);
 
-    void getTokenForVerify();
+    EventResponse checkEventToVerify(String eventId);
 }
