@@ -3,6 +3,8 @@ package com.example.showtime.transaction.controller;
 import com.example.showtime.common.model.response.ApiResponse;
 import com.example.showtime.transaction.model.request.CheckTransactionStatusRequest;
 import com.example.showtime.transaction.model.response.CheckTransactionStatusResponse;
+import com.example.showtime.transaction.model.response.ValidTransactionItems;
+import com.example.showtime.transaction.repository.TransactionRepository;
 import com.example.showtime.transaction.service.ITransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +15,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -20,6 +23,7 @@ import java.net.URI;
 @RequestMapping("/api/v1/transaction")
 public class TransactionController {
     private final ITransactionService transactionService;
+    private final TransactionRepository transactionRepository;
 
     @Value("${sslcommerz.redirect.web.url}")
     private String redirectWebUrl;
@@ -46,5 +50,11 @@ public class TransactionController {
         URI redirectUri = ServletUriComponentsBuilder.fromUriString(frontendUrl).build().toUri();
 
         return ResponseEntity.status(HttpStatus.FOUND).location(redirectUri).build();
+    }
+
+    @GetMapping("/admin/valid-transactions")
+    public ResponseEntity<ApiResponse<List<ValidTransactionItems>>> getValidTransactions() {
+        List<ValidTransactionItems> response = transactionService.getValidTransactions();
+        return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Valid transactions retrieved successfully", response));
     }
 }

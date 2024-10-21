@@ -62,7 +62,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             UserDetails userDetails = null;
 
-            if (role == UserRole.ADMIN.getValue()) {
+            if (role == UserRole.ADMIN.getValue() || role == UserRole.SUPER_ADMIN.getValue()) {
                 userDetails = this.adminDetailsService.loadUserByUsername(username);
             } else if (role == UserRole.USER.getValue()) {
                 userDetails = this.userDetailsService.loadUserByUsername(username);

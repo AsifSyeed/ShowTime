@@ -1,7 +1,9 @@
 package com.example.showtime.event.controller;
 
+import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.model.request.EventRequest;
 import com.example.showtime.common.model.response.ApiResponse;
+import com.example.showtime.event.model.response.AdminEventResponse;
 import com.example.showtime.event.model.response.EventResponse;
 import com.example.showtime.event.services.IEventService;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,16 @@ public class EventController {
 //        }
 
         ApiResponse<List<EventResponse>> successResponse = new ApiResponse<>(HttpStatus.OK.value(), "Events retrieved successfully", eventResponses);
+
+        return ResponseEntity.ok(successResponse);
+    }
+
+    @GetMapping("/admin/all")
+    // add path variable for event id
+    public ResponseEntity<ApiResponse<List<AdminEventResponse>>> getAllEventsForAdmin() {
+        List<AdminEventResponse> eventResponses = iEventService.getAllEventsForAdmin();
+
+        ApiResponse<List<AdminEventResponse>> successResponse = new ApiResponse<>(HttpStatus.OK.value(), "Events retrieved successfully", eventResponses);
 
         return ResponseEntity.ok(successResponse);
     }

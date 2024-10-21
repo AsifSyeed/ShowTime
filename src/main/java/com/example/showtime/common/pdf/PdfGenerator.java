@@ -27,7 +27,7 @@ public class PdfGenerator {
 
     private final StorageService storageService;
     public byte[] generateTicketPdf(Ticket ticket) throws IOException {
-        String fileName = "generic_ticket_" + ticket.getEventId() + ".pdf";
+        String fileName = "generic_ticket_" + ticket.getEventId() + "_" + ticket.getTicketCategory() + ".pdf";
 
         // Download the PDF template from S3
         byte[] pdfTemplate = storageService.downloadFile(fileName);

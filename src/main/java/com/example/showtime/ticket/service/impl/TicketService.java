@@ -313,7 +313,7 @@ public class TicketService implements ITicketService {
                 .findFirst()
                 .orElse(null);
 
-        if (userRole == null || Integer.parseInt(userRole) != UserRole.ADMIN.getValue()) {
+        if (userRole == null || Integer.parseInt(userRole) != UserRole.ADMIN.getValue() || Integer.parseInt(userRole) != UserRole.SUPER_ADMIN.getValue()) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "You are not authorized to create physical ticket");
         }
 
@@ -366,6 +366,74 @@ public class TicketService implements ITicketService {
         physicalTicket.setTicketOwnerName(ticket.getTicketOwnerName());
         physicalTicket.setTicketOwnerNumber(ticket.getTicketOwnerNumber());
         physicalTicketService.updatePhysicalTicket(physicalTicket);
+    }
+
+    @Override
+    public void sendEmailToFailedTransaction() {
+        // find all tickets with transaction status is not success
+        List<Ticket> failedTickets = ticketRepository.findByTicketTransactionStatusNot(TransactionStatusEnum.SUCCESS.getValue());
+
+        // run a loop to failedTickets length
+        failedTickets.forEach(ticket -> {
+            // send email to ticket owner
+            String htmlContent = String.format(
+                    "<p style=\"font-size: 16px;\">Dear <strong>%s</strong>,</p>"
+                            + "<p>We hope this message finds you well. We wanted to inform you that we recently experienced some technical issues on our site, and we sincerely apologize for any inconvenience this may have caused.</p>"
+                            + "<p>As a token of our appreciation for your understanding, we are pleased to offer you an exclusive discount of <strong>350 Taka</strong> on your next purchase.</p>"
+                            + "<p>Simply use the code <strong>&quot;DHAKAVIBES350&quot;</strong> at checkout. You can purchase up to a maximum of 4 tickets under this code.</p>"
+                            + "<p><strong>Note:</strong> This coupon is valid till <strong>11:59 PM, 26th September, 2024</strong>.</p>"
+                            + "<p>Don't miss out on <a href=\"https://www.countersbd.com/events/dhakavibes\">Relevent Presents Dhaka Vibes</a>! Check out the event for more details.</p>"
+                            + "<p>Thank you for your continued support! If you have any questions or need assistance, feel free to reach out to us at <a href=\"tel:01871535919\">01871535919</a>.</p>"
+                            + "<p>Regards,</p>"
+                            + "<p>Team Counters</p>",
+                    ticket.getTicketOwnerName()
+            );
+
+            emailService.sendGenericEmail(ticket.getTicketOwnerEmail(), "Special Coupon Code due to Technical Issue", htmlContent);
+        });
+    }
+
+    @Override
+    public List<Ticket> getTicketsByTransactionStatus(int value) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .orElse(null);
+
+        // check if userRole is null or not either SUPER_ADMIN or ADMIN
+        if (userRole == null) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "User Role not found");
+        }
+
+        if (Integer.parseInt(userRole) != UserRole.SUPER_ADMIN.getValue() && Integer.parseInt(userRole) != UserRole.ADMIN.getValue()) {
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "You are not authorized");
+        }
+
+        if (Integer.parseInt(userRole) == UserRole.SUPER_ADMIN.getValue()) {
+            return ticketRepository.findByTicketTransactionStatus(value);
+        } else {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = auth.getName();
+
+            List<Event> events = eventService.getEventByCreatedBy(userEmail);
+            // get event ids
+            List<String> eventIds = events.stream()
+                    .map(Event::getEventId)
+                    .collect(Collectors.toList());
+            // return tickets by event ids and transaction status
+            return ticketRepository.findByEventIdInAndTicketTransactionStatus(eventIds, value);
+        }
+    }
+
+    @Override
+    public List<Ticket> getTicketsByEventIdsAndTransactionStatus(List<String> eventIds, int value) {
+        return ticketRepository.findByEventIdInAndTicketTransactionStatus(eventIds, value);
+    }
+
+    @Override
+    public List<Ticket> getTicketsByEventIdAndTransactionStatus(String eventId, int value) {
+        return ticketRepository.findByEventIdAndTicketTransactionStatus(eventId, value);
     }
 
     private Ticket getTicketByUserAndTicketId(UserAccount createdBy, String ticketId) {

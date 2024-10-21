@@ -33,4 +33,7 @@ public class Referral {
 
     @Column(name = "REFERRAL_TYPE")
     private Integer referralType;
+
+    @Column(name = "IS_ACTIVE")
+    private Boolean isActive;
 }

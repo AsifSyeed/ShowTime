@@ -51,7 +51,7 @@ public class EmailService implements IEmailService {
 
             javaMailSender.send(mimeMessage);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            System.out.println("Not valid email");
         }
     }
 

@@ -1,11 +1,13 @@
 package com.example.showtime.ticket.controller;
 
 import com.example.showtime.common.model.response.ApiResponse;
+import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.ticket.model.request.*;
 import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import com.example.showtime.ticket.model.response.MyTicketResponse;
 import com.example.showtime.ticket.service.IPhysicalTicketService;
 import com.example.showtime.ticket.service.ITicketService;
+import com.example.showtime.transaction.enums.TransactionStatusEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -78,6 +80,22 @@ public class TicketController {
     public ResponseEntity<ApiResponse<?>> sellPhysicalTicket(@RequestBody @Valid SellPhysicalTicketRequest sellPhysicalTicketRequest) {
         physicalTicketService.sellPhysicalTicket(sellPhysicalTicketRequest);
         ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Physical ticket sold successfully", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/send-email-to-failed-transaction")
+    public ResponseEntity<ApiResponse<?>> sendEmailToFailedTransaction() {
+        ticketService.sendEmailToFailedTransaction();
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Email sent successfully", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/admin-all")
+    public ResponseEntity<ApiResponse<List<Ticket>>> getAllTickets() {
+        List<Ticket> myTicketResponses = ticketService.getTicketsByTransactionStatus(TransactionStatusEnum.SUCCESS.getValue());
+
+        ApiResponse<List<Ticket>> response = new ApiResponse<>(HttpStatus.OK.value(), "Tickets retrieved successfully", myTicketResponses);
+
         return ResponseEntity.ok(response);
     }
 }

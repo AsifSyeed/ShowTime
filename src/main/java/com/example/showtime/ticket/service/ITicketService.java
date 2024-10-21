@@ -32,4 +32,12 @@ public interface ITicketService {
     void createPhysicalTicket(CreatePhysicalTicketRequest physicalTicketRequest);
 
     void tagPhysicalTicket(TagPhysicalTicketRequest tagPhysicalTicketRequest);
+
+    void sendEmailToFailedTransaction();
+
+    List<Ticket> getTicketsByTransactionStatus(int value);
+
+    List<Ticket> getTicketsByEventIdsAndTransactionStatus(List<String> eventIds, int value);
+
+    List<Ticket> getTicketsByEventIdAndTransactionStatus(String eventId, int value);
 }

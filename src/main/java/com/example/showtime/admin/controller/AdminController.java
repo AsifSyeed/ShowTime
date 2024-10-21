@@ -1,9 +1,11 @@
 package com.example.showtime.admin.controller;
 
 import com.example.showtime.admin.model.request.AdminSignUpRequest;
+import com.example.showtime.admin.model.response.DashboardInfoResponse;
 import com.example.showtime.admin.service.IAdminService;
 import com.example.showtime.common.model.response.ApiResponse;
 import com.example.showtime.common.model.response.UserProfileResponse;
+import com.example.showtime.ticket.model.response.EventCategoryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +48,21 @@ public class AdminController {
 
         ApiResponse<List<UserProfileResponse>> response = new ApiResponse<>(HttpStatus.OK.value(), "User list fetched successfully", userProfileResponse);
 
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/dashboard-info")
+    public ResponseEntity<ApiResponse<DashboardInfoResponse>> getDashboardInfo() {
+        DashboardInfoResponse dashboardInfo = iAdminService.getDashboardInfo(null);
+        ApiResponse<DashboardInfoResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Dashboard info fetched successfully", dashboardInfo);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/dashboard-info/{eventId}")
+    public ResponseEntity<ApiResponse<DashboardInfoResponse>> getDashboardInfo(
+            @PathVariable String eventId) {
+        DashboardInfoResponse dashboardInfo = iAdminService.getDashboardInfo(eventId);
+        ApiResponse<DashboardInfoResponse> response = new ApiResponse<>(HttpStatus.OK.value(), "Dashboard info fetched successfully", dashboardInfo);
         return ResponseEntity.ok(response);
     }
 }

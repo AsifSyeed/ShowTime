@@ -17,4 +17,5 @@ public class EventCategoryResponse {
     private Long categoryAvailableCount;
     private Long maximumQuantity;
     private Double discountedPrice;
+    private String categoryDescription;
 }

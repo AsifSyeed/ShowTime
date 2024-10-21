@@ -5,11 +5,13 @@ import com.example.showtime.admin.repository.AdminRepository;
 import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.model.request.EventRequest;
+import com.example.showtime.event.model.response.AdminEventResponse;
 import com.example.showtime.event.model.response.EventResponse;
 import com.example.showtime.event.repository.EventRepository;
 import com.example.showtime.event.services.IEventService;
 import com.example.showtime.referral.repository.ReferralRepository;
 import com.example.showtime.ticket.model.request.CategoryRequest;
+import com.example.showtime.ticket.model.response.EventCategoryResponse;
 import com.example.showtime.ticket.service.ICategoryService;
 import com.example.showtime.user.enums.UserRole;
 import lombok.RequiredArgsConstructor;
@@ -85,6 +87,11 @@ public class EventService implements IEventService {
     }
 
     @Override
+    public List<Event> getEventByCreatedBy(String createdBy) {
+        return eventRepository.findByCreatedBy(createdBy);
+    }
+
+    @Override
     public void updateAvailableTickets(String eventId, long categoryId, long size) {
         Event event = getEventById(eventId);
         event.setEventAvailableCount(event.getEventAvailableCount() - size);
@@ -109,6 +116,72 @@ public class EventService implements IEventService {
                 .eventDescription(event.getEventDescription())
                 .categoryList(categoryService.getAllCategoriesByEventId(event.getEventId()))
                 .build();
+    }
+
+    @Override
+    public List<AdminEventResponse> getAllEventsForAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .orElse(null);
+
+        // check if userRole is null or not either SUPER_ADMIN or ADMIN
+        if (userRole == null) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "User Role not found");
+        }
+
+        if (Integer.parseInt(userRole) != UserRole.SUPER_ADMIN.getValue() && Integer.parseInt(userRole) != UserRole.ADMIN.getValue()) {
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "You are not authorized");
+        }
+
+        if (Integer.parseInt(userRole) == UserRole.SUPER_ADMIN.getValue()) {
+            return eventRepository.findAll().stream()
+                    .map(event -> AdminEventResponse.builder()
+                            .id(event.getId())
+                            .eventName(event.getEventName())
+                            .eventCapacity(event.getEventCapacity())
+                            .eventAvailableCount(event.getEventAvailableCount())
+                            .eventStartDate(String.valueOf(event.getEventStartDate()))
+                            .eventEndDate(String.valueOf(event.getEventEndDate()))
+                            .eventId(event.getEventId())
+                            .isActive(event.getIsActive())
+                            .createdBy(event.getCreatedBy())
+                            .eventBannerUrl(event.getEventBannerUrl())
+                            .eventThumbnailUrl(event.getEventThumbnailUrl())
+                            .eventDescription(event.getEventDescription())
+                            .eventLocation(event.getEventLocation())
+                            .categoryList(categoryService.getAllCategoriesByEventId(event.getEventId()))
+                            .build())
+                    .collect(Collectors.toList());
+        } else {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = auth.getName();
+
+            return eventRepository.findByCreatedBy(userEmail).stream()
+                    .map(event -> AdminEventResponse.builder()
+                            .id(event.getId())
+                            .eventName(event.getEventName())
+                            .eventCapacity(event.getEventCapacity())
+                            .eventAvailableCount(event.getEventAvailableCount())
+                            .eventStartDate(String.valueOf(event.getEventStartDate()))
+                            .eventEndDate(String.valueOf(event.getEventEndDate()))
+                            .eventId(event.getEventId())
+                            .isActive(event.getIsActive())
+                            .createdBy(event.getCreatedBy())
+                            .eventBannerUrl(event.getEventBannerUrl())
+                            .eventThumbnailUrl(event.getEventThumbnailUrl())
+                            .eventDescription(event.getEventDescription())
+                            .eventLocation(event.getEventLocation())
+                            .categoryList(categoryService.getAllCategoriesByEventId(event.getEventId()))
+                            .build())
+                    .collect(Collectors.toList());
+        }
+    }
+
+    @Override
+    public List<EventCategoryResponse> getCategoryList(String eventId) {
+        return categoryService.getAllCategoriesByEventId(eventId);
     }
 
     private Event prepareEventModel(EventRequest eventRequest) {
@@ -144,7 +217,7 @@ public class EventService implements IEventService {
                 .findFirst()
                 .orElse(null);
 
-        if (userRole == null || Integer.parseInt(userRole) != UserRole.ADMIN.getValue()) {
+        if (userRole == null || Integer.parseInt(userRole) != UserRole.SUPER_ADMIN.getValue()) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "You are not authorized to create an event");
         }
 

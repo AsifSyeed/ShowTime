@@ -46,6 +46,7 @@ public class CategoryService implements ICategoryService {
                         .categoryName(category.getCategoryName())
                         .categoryPrice(category.getCategoryPrice())
                         .categoryCapacity(category.getCategoryCapacity())
+                        .categoryDescription(category.getCategoryDescription())
                         .categoryAvailableCount(category.getCategoryAvailableCount())
                         .discountedPrice(category.getCategoryPrice() - getDefaultDiscount(eventId))
                         .maximumQuantity(category.getMaximumQuantity())

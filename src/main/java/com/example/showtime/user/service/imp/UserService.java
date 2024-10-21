@@ -204,6 +204,11 @@ public class UserService implements IUserService {
         }
     }
 
+    @Override
+    public Long getTotalUserCount() {
+        return userRepository.count();
+    }
+
     private void validateRequest(SignUpRequest signUpRequest) {
         if (Objects.isNull(signUpRequest) ||
                 StringUtils.isEmpty(signUpRequest.getEmail()) ||

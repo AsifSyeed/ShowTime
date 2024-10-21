@@ -3,6 +3,7 @@ package com.example.showtime.referral.controller;
 import com.example.showtime.common.model.response.ApiResponse;
 import com.example.showtime.referral.model.request.CreateReferralRequest;
 import com.example.showtime.referral.model.entity.Referral;
+import com.example.showtime.referral.model.request.UpdateReferralRequest;
 import com.example.showtime.referral.model.response.GetReferralResponse;
 import com.example.showtime.referral.service.IReferralService;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,15 @@ public class ReferralController {
         referralService.createReferral(referral);
 
         ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Referral created successfully", null);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<ApiResponse<?>> updateReferral(@RequestBody UpdateReferralRequest referral) {
+        referralService.updateReferral(referral);
+
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Referral updated successfully", null);
 
         return ResponseEntity.ok(response);
     }

@@ -25,4 +25,6 @@ public interface IUserService {
     void verifyForgetPassword(ForgetPasswordRequest forgetPasswordRequest);
 
     void changePassword(ChangePasswordRequest changePasswordRequest);
+
+    Long getTotalUserCount();
 }

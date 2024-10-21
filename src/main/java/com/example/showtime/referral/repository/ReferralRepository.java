@@ -12,4 +12,10 @@ public interface ReferralRepository extends JpaRepository<Referral, Long> {
     List<Referral> findByEventId(String eventId);
 
     Referral findByEventIdAndReferralType(String eventId, int value);
+
+    Referral findByReferralCode(String referralCode);
+
+    Referral findByIdAndReferralCodeAndEventId(Long id, String referralCode, String eventId);
+
+    List<Referral> findByEventIdIn(List<String> eventIds);
 }

@@ -6,7 +6,8 @@ import lombok.Getter;
 @Getter
 public enum UserRole {
     USER(1),
-    ADMIN(2);
+    ADMIN(2),
+    SUPER_ADMIN(0);
 
     private final int value;
 

@@ -47,4 +47,7 @@ public class Event {
 
     @Column(name = "EVENT_DESCRIPTION")
     private String eventDescription;
+
+    @Column(name = "EVENT_LOCATION")
+    private String eventLocation;
 }
