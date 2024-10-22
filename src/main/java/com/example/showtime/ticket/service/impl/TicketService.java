@@ -2,6 +2,7 @@ package com.example.showtime.ticket.service.impl;
 
 import com.example.showtime.admin.repository.AdminRepository;
 import com.example.showtime.common.exception.BaseException;
+import com.example.showtime.common.pdf.PdfGenerator;
 import com.example.showtime.common.uniqueId.UniqueIdGenerator;
 import com.example.showtime.email.service.IEmailService;
 import com.example.showtime.event.model.entity.Event;
@@ -55,6 +56,7 @@ public class TicketService implements ITicketService {
     private final IPhysicalTicketService physicalTicketService;
     private final UniqueIdGenerator uniqueIdGenerator;
     private final AdminRepository adminRepository;
+    private final PdfGenerator pdfGenerator;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -434,6 +436,17 @@ public class TicketService implements ITicketService {
     @Override
     public List<Ticket> getTicketsByEventIdAndTransactionStatus(String eventId, int value) {
         return ticketRepository.findByEventIdAndTicketTransactionStatus(eventId, value);
+    }
+
+    @Override
+    public byte[] generateTicketPdf(String ticketId) {
+        try {
+            Ticket ticket = getTicketByTicketId(ticketId);
+
+            return pdfGenerator.generateTicketPdf(ticket);
+        } catch (Exception e) {
+            throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error generating PDF");
+        }
     }
 
     private Ticket getTicketByUserAndTicketId(UserAccount createdBy, String ticketId) {

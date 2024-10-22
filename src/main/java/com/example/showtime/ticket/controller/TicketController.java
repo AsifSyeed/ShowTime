@@ -9,8 +9,8 @@ import com.example.showtime.ticket.service.IPhysicalTicketService;
 import com.example.showtime.ticket.service.ITicketService;
 import com.example.showtime.transaction.enums.TransactionStatusEnum;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -20,6 +20,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/ticket")
+@Slf4j
 public class TicketController {
     private final ITicketService ticketService;
     private final IPhysicalTicketService physicalTicketService;
@@ -97,5 +98,24 @@ public class TicketController {
         ApiResponse<List<Ticket>> response = new ApiResponse<>(HttpStatus.OK.value(), "Tickets retrieved successfully", myTicketResponses);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/download-pdf")
+    public ResponseEntity<byte[]> downloadTicketPdf(@RequestParam String ticketId) {
+        // Logic to generate or fetch the PDF
+
+        log.info("Downloading PDF for ticketId: {}", ticketId);
+
+        byte[] pdfBytes = ticketService.generateTicketPdf(ticketId);  // Assuming you have a service to generate PDFs
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.builder("attachment")
+                .filename("ticket_" + ticketId + ".pdf")
+                .build());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
     }
 }

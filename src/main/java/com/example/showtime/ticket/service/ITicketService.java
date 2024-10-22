@@ -40,4 +40,6 @@ public interface ITicketService {
     List<Ticket> getTicketsByEventIdsAndTransactionStatus(List<String> eventIds, int value);
 
     List<Ticket> getTicketsByEventIdAndTransactionStatus(String eventId, int value);
+
+    byte[] generateTicketPdf(String ticketId);
 }

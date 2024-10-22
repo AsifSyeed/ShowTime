@@ -26,4 +26,5 @@ public class EventResponse {
     private List<EventCategoryResponse> categoryList;
     private String eventDescription;
     private List<GetReferralResponse> referralList;
+    private String eventLocation;
 }

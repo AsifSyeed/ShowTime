@@ -68,6 +68,7 @@ public class EventService implements IEventService {
                         .eventBannerUrl(event.getEventBannerUrl())
                         .eventThumbnailUrl(event.getEventThumbnailUrl())
                         .eventDescription(event.getEventDescription())
+                        .eventLocation(event.getEventLocation())
                         .categoryList(categoryService.getAllCategoriesByEventId(event.getEventId()))
                         .build())
                 .collect(Collectors.toList());

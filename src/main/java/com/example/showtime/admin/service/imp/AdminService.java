@@ -144,7 +144,11 @@ public class AdminService implements IAdminService {
                                 .filter(ticket -> ticket.getTicketCategory() == categoryId)
                                 .collect(Collectors.toList());
 
-                        long totalTickets = purchasedTicketsByCategory.size();
+                        double totalTickets = transactionItems.stream()
+                                .filter(transactionItem -> purchasedTicketsByCategory.stream()
+                                        .anyMatch(ticket -> ticket.getTicketTransactionId().equals(transactionItem.getTransactionRefNo())))
+                                .mapToDouble(TransactionItem::getNumberOfTickets)
+                                .sum();
 
                         // need to map total amount with transactionItem.transactionId == ticket.transactionId first
                         double totalAmount = transactionItems.stream()
@@ -156,7 +160,7 @@ public class AdminService implements IAdminService {
                         return CategorySalesInfo.builder()
                                 .categoryId(eventCategoryResponse.getCategoryId())
                                 .categoryName(eventCategoryResponse.getCategoryName())
-                                .totalPurchasedTicket(totalTickets)
+                                .totalPurchasedTicket((long) totalTickets)
                                 .totalRevenue(totalAmount)
                                 .eventId(eventId)
                                 .build();

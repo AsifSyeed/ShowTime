@@ -25,7 +25,7 @@ public class UserController {
     private final IUserService iUserService;
 
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<AuthResponse>> signUpUser(@RequestBody @Valid SignUpRequest signUpRequest) {
+    public ResponseEntity<ApiResponse<AuthResponse>> signUpUser(@Valid @RequestBody SignUpRequest signUpRequest) {
 
         AuthResponse signUpResponse = iUserService.signUpUser(signUpRequest);
 
