@@ -1,9 +1,11 @@
 package com.example.showtime.transaction.ssl.Utility;
 
+import com.example.showtime.transaction.model.response.SSLRefundResponse;
 import com.example.showtime.transaction.ssl.parametermappings.SSLCommerzInitResponse;
 import com.example.showtime.transaction.ssl.parametermappings.SSLCommerzValidatorResponse;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -41,5 +43,11 @@ public class Util {
         }
         br.close();
         return output;
+    }
+
+    public static SSLRefundResponse extractRefundResponse(String json) {
+        Gson gson = new Gson();
+
+        return gson.fromJson(json, SSLRefundResponse.class);
     }
 }

@@ -8,7 +8,8 @@ public enum TransactionStatusEnum {
     PENDING(2),
     SUCCESS(3),
     FAILED(4),
-    CANCELLED(5);
+    CANCELLED(5),
+    REFUNDED(6);
 
     private final int value;
 

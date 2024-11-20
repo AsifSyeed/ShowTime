@@ -25,17 +25,17 @@ public class UniqueIdGenerator {
         }
 
         if (lastTimestamp == timestamp) {
-            sequence.set(0);
-        } else {
             int sequenceValue = sequence.incrementAndGet() & MAX_SEQUENCE;
             if (sequenceValue == 0) {
-                timestamp = tilNextMillis(lastTimestamp);
+                timestamp = tilNextMillis(lastTimestamp); // Move to the next millisecond if sequence overflows
             }
+        } else {
+            sequence.set(0); // Reset sequence when timestamp changes
         }
 
         lastTimestamp = timestamp;
 
-        return String.format("%s-%d-%d", prefix, timestamp, sequence.get());
+        return String.format("%s-%d-%04d", prefix, timestamp, sequence.get()); // Format with 4 digits for sequence
     }
 
     private long tilNextMillis(long lastTimestamp) {

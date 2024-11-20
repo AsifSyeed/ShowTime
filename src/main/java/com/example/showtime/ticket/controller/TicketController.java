@@ -35,6 +35,15 @@ public class TicketController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/admin/create")
+    public ResponseEntity<ApiResponse<?>> adminCreateTicket(@RequestBody @Valid BuyTicketRequest buyTicketRequest) {
+
+        ticketService.adminCreateTicket(buyTicketRequest);
+
+        ApiResponse<?> response = new ApiResponse<>(HttpStatus.OK.value(), "Ticket created successfully", null);
+
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/my-tickets")
     public ResponseEntity<ApiResponse<List<MyTicketResponse>>> getMyTickets() {

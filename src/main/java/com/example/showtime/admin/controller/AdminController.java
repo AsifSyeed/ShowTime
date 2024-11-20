@@ -1,11 +1,11 @@
 package com.example.showtime.admin.controller;
 
 import com.example.showtime.admin.model.request.AdminSignUpRequest;
+import com.example.showtime.admin.model.response.AdminUserInfoResponse;
 import com.example.showtime.admin.model.response.DashboardInfoResponse;
 import com.example.showtime.admin.service.IAdminService;
 import com.example.showtime.common.model.response.ApiResponse;
 import com.example.showtime.common.model.response.UserProfileResponse;
-import com.example.showtime.ticket.model.response.EventCategoryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,11 +42,11 @@ public class AdminController {
     }
 
     @GetMapping("/users/list")
-    public ResponseEntity<ApiResponse<List<UserProfileResponse>>> getUserList() {
+    public ResponseEntity<ApiResponse<List<AdminUserInfoResponse>>> getUserList() {
 
-        List<UserProfileResponse> userProfileResponse = iAdminService.getUserList();
+        List<AdminUserInfoResponse> userProfileResponse = iAdminService.getUserList();
 
-        ApiResponse<List<UserProfileResponse>> response = new ApiResponse<>(HttpStatus.OK.value(), "User list fetched successfully", userProfileResponse);
+        ApiResponse<List<AdminUserInfoResponse>> response = new ApiResponse<>(HttpStatus.OK.value(), "User list fetched successfully", userProfileResponse);
 
         return ResponseEntity.ok(response);
     }

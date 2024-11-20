@@ -1,5 +1,6 @@
 package com.example.showtime.transaction.ssl;
 
+import com.example.showtime.transaction.model.response.SSLRefundResponse;
 import com.example.showtime.transaction.ssl.Utility.ParameterBuilder;
 import com.example.showtime.transaction.ssl.Utility.Util;
 import com.example.showtime.transaction.ssl.parametermappings.SSLCommerzInitResponse;
@@ -37,6 +38,7 @@ public class SSLCommerz {
     private String submitURL = "gwprocess/v4/api.php";
     private String validationURL = "validator/api/validationserverAPI.php";
     private String checkingURL = "validator/api/merchantTransIDvalidationAPI.php";
+    private String refundURL = "validator/api/merchantTransIDvalidationAPI.php";
 
     /****
      *
@@ -201,6 +203,23 @@ public class SSLCommerz {
             this.error = "Unable to get Transaction JSON status";
             return false;
 
+        }
+    }
+
+    public SSLRefundResponse initiateRefund(String bankTranId, String refundAmount, String refundRemarks, String refId) throws IOException {
+        String EncodedStoreID = URLEncoder.encode(this.storeId, Charset.forName("UTF-8").displayName());
+        String EncodedStorePassword = URLEncoder.encode(this.storePass, Charset.forName("UTF-8").displayName());
+
+        String validUrl = this.sslczURL + this.refundURL + "?bank_tran_id=" + bankTranId + "&refund_amount=" + refundAmount
+                + "&refund_remarks=" + refundRemarks + "&refe_id" + refId + "&store_id=" + EncodedStoreID + "&store_passwd=" + EncodedStorePassword + "&v=1&format=json";
+
+        String json = Util.getByOpeningJavaUrlConnection(validUrl);
+
+        if (!json.isEmpty()) {
+            SSLRefundResponse resp = Util.extractRefundResponse(json);
+            return resp;
+        } else {
+            return null;
         }
     }
 

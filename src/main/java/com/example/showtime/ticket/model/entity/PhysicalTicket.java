@@ -38,4 +38,10 @@ public class PhysicalTicket {
 
     @Column(name = "TICKET_OWNER_EMAIL")
     private String ticketOwnerEmail;
+
+    @Column(name = "TICKET_CATEGORY")
+    private Long ticketCategory;
+
+    @Column(name ="VERIFIER_ID")
+    private String verifierId;
 }

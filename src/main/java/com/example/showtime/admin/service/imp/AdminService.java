@@ -2,6 +2,7 @@ package com.example.showtime.admin.service.imp;
 
 import com.example.showtime.admin.model.entity.Admin;
 import com.example.showtime.admin.model.request.AdminSignUpRequest;
+import com.example.showtime.admin.model.response.AdminUserInfoResponse;
 import com.example.showtime.admin.model.response.CategorySalesInfo;
 import com.example.showtime.admin.model.response.DashboardInfoResponse;
 import com.example.showtime.admin.repository.AdminRepository;
@@ -80,7 +81,7 @@ public class AdminService implements IAdminService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public List<UserProfileResponse> getUserList() {
+    public List<AdminUserInfoResponse> getUserList() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userRole = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -94,17 +95,19 @@ public class AdminService implements IAdminService {
         List<UserAccount> userList = userService.getUserList();
 
         return userList.stream()
-                .map(userAccount -> UserProfileResponse.builder()
+                .map(userAccount -> AdminUserInfoResponse.builder()
                         .userName(userAccount.getUserName())
                         .emailId(userAccount.getEmail())
                         .phoneNumber(userAccount.getPhoneNumber())
                         .userRole(userAccount.getRole())
                         .userFirstName(userAccount.getFirstName())
                         .userLastName(userAccount.getLastName())
+                        .numberOfTickets((long) ticketService.getTicketsByCreatedBy(userAccount.getEmail()).size())
                         .build())
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     @Override
     public DashboardInfoResponse getDashboardInfo(String eventId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -126,6 +129,7 @@ public class AdminService implements IAdminService {
         List<Ticket> purchasedTickets;
         List<TransactionItem> transactionItems;
         double totalRevenue;
+        double numberOfTickets = 0;
 
         // create an empty list of category
         List<CategorySalesInfo> categorySalesInfo = new ArrayList<>();
@@ -171,14 +175,14 @@ public class AdminService implements IAdminService {
             totalRevenue = categorySalesInfo.stream()
                     .mapToDouble(CategorySalesInfo::getTotalRevenue)
                     .sum();
+
+            // set the total number of tickets
+            numberOfTickets = categorySalesInfo.stream()
+                    .mapToDouble(CategorySalesInfo::getTotalPurchasedTicket)
+                    .sum();
         } else {
             if (Integer.parseInt(userRole) == UserRole.SUPER_ADMIN.getValue()) {
-                purchasedTickets = ticketService.getTicketsByTransactionStatus(TransactionStatusEnum.SUCCESS.getValue());
                 transactionItems = transactionService.getTransactionsByTransactionStatus(TransactionStatusEnum.SUCCESS.getValue());
-
-                totalRevenue = transactionItems.stream()
-                        .mapToDouble(TransactionItem::getTotalAmount)
-                        .sum();
             } else {
                 Authentication auth = SecurityContextHolder.getContext().getAuthentication();
                 String userEmail = auth.getName();
@@ -189,13 +193,16 @@ public class AdminService implements IAdminService {
                         .map(Event::getEventId)
                         .collect(Collectors.toList());
 
-                purchasedTickets = ticketService.getTicketsByEventIdsAndTransactionStatus(eventIds, TransactionStatusEnum.SUCCESS.getValue());
                 transactionItems = transactionService.getTransactionsByEventIdsAndTransactionStatus(eventIds, TransactionStatusEnum.SUCCESS.getValue());
-
-                totalRevenue = transactionItems.stream()
-                        .mapToDouble(TransactionItem::getTotalAmount)
-                        .sum();
             }
+
+            totalRevenue = transactionItems.stream()
+                    .mapToDouble(TransactionItem::getTotalAmount)
+                    .sum();
+
+            numberOfTickets = transactionItems.stream()
+                    .mapToDouble(TransactionItem::getNumberOfTickets)
+                    .sum();
         }
 
         // get total users
@@ -203,7 +210,7 @@ public class AdminService implements IAdminService {
 
         return DashboardInfoResponse.builder()
                 .totalRevenue(totalRevenue)
-                .totalPurchasedTicket((long) purchasedTickets.size())
+                .totalPurchasedTicket((long) numberOfTickets)
                 .totalUser(totalUser)
                 .categorySalesInfoList(categorySalesInfo)
                 .build();

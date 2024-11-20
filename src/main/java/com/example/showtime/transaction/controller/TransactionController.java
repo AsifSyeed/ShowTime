@@ -2,6 +2,7 @@ package com.example.showtime.transaction.controller;
 
 import com.example.showtime.common.model.response.ApiResponse;
 import com.example.showtime.transaction.model.request.CheckTransactionStatusRequest;
+import com.example.showtime.refund.model.request.RefundRequest;
 import com.example.showtime.transaction.model.response.CheckTransactionStatusResponse;
 import com.example.showtime.transaction.model.response.ValidTransactionItems;
 import com.example.showtime.transaction.repository.TransactionRepository;
@@ -42,9 +43,12 @@ public class TransactionController {
                                                       @RequestParam(required = false) String bank_tran_id,
                                                       @RequestParam(required = false) String currency,
                                                       @RequestParam(required = false) String error,
-                                                      @RequestParam(required = false) String status) {
+                                                      @RequestParam(required = false) String status,
+                                                      @RequestParam(required = false) String card_type,
+                                                      @RequestParam(required = false) String card_issuer,
+                                                      @RequestParam(required = false) String card_brand) {
 
-        transactionService.sslTransactionUpdate(tran_id, val_id, amount, currency, status, error, bank_tran_id);
+        transactionService.sslTransactionUpdate(tran_id, val_id, amount, currency, status, error, bank_tran_id, card_type, card_issuer, card_brand);
 
         String frontendUrl = redirectWebUrl + "/checkout/validate?&tran_id=" + tran_id;
         URI redirectUri = ServletUriComponentsBuilder.fromUriString(frontendUrl).build().toUri();

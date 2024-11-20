@@ -9,10 +9,14 @@ import com.example.showtime.ticket.model.response.BuyTicketResponse;
 import com.example.showtime.ticket.model.response.MyTicketResponse;
 
 import javax.validation.Valid;
+import java.util.Collection;
 import java.util.List;
 
 public interface ITicketService {
     BuyTicketResponse createTicket(BuyTicketRequest buyTicketRequest);
+
+    void adminCreateTicket(BuyTicketRequest buyTicketRequest);
+
     Ticket getTicketById(Long ticketId);
     List<Ticket> getAllTickets();
     List<Ticket> getTicketsByEventId(String eventId);
@@ -42,4 +46,8 @@ public interface ITicketService {
     List<Ticket> getTicketsByEventIdAndTransactionStatus(String eventId, int value);
 
     byte[] generateTicketPdf(String ticketId);
+
+    void updateTicket(Ticket ticket);
+
+    List<Ticket> getTicketsByCreatedBy(String email);
 }

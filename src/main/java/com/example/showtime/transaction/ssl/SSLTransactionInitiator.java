@@ -1,5 +1,6 @@
 package com.example.showtime.transaction.ssl;
 
+import com.example.showtime.transaction.model.response.SSLRefundResponse;
 import com.example.showtime.transaction.ssl.Utility.ParameterBuilder;
 import com.example.showtime.user.model.entity.UserAccount;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,6 +55,18 @@ public class SSLTransactionInitiator {
         try {
             SSLCommerz sslcz = new SSLCommerz(storeId, storePassword, storeTestMode);
             response = sslcz.orderValidate(transactionRefNo, transactionAmount, transactionCurrency, validationId);
+            return response;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return response;
+    }
+
+    public SSLRefundResponse  refundTransaction(String bankTranId, String refundAmount, String refundRemarks, String refId) {
+        SSLRefundResponse response = null;
+        try {
+            SSLCommerz sslcz = new SSLCommerz(storeId, storePassword, storeTestMode);
+            response = sslcz.initiateRefund(bankTranId, refundAmount, refundRemarks, refId);
             return response;
         } catch (Exception e) {
             e.printStackTrace();

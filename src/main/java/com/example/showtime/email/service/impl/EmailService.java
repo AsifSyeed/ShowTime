@@ -4,6 +4,8 @@ import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.common.pdf.PdfGenerator;
 import com.example.showtime.email.service.IEmailService;
 import com.example.showtime.ticket.model.entity.Ticket;
+import com.example.showtime.user.model.entity.UserAccount;
+import com.example.showtime.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -15,11 +17,13 @@ import org.springframework.stereotype.Service;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.ByteArrayDataSource;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class EmailService implements IEmailService {
     private final PdfGenerator pdfGenerator;
+    private final UserRepository userRepository;
 
     @Value("${spring.mail.username}")
     private String from;
@@ -29,9 +33,7 @@ public class EmailService implements IEmailService {
     @Override
     public void sendTicketConfirmationMail(List<Ticket> transactionTicketList) {
         try {
-            for (Ticket ticket : transactionTicketList) {
-                sendPdf(ticket);
-            }
+            sendPdf(transactionTicketList);
         } catch (AccessDeniedException e) {
             throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
         }
@@ -55,29 +57,32 @@ public class EmailService implements IEmailService {
         }
     }
 
-    private void sendPdf(Ticket ticket) {
+    private void sendPdf(List<Ticket> tickets) {
         try {
-            byte[] pdfBytes = pdfGenerator.generateTicketPdf(ticket);
-
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
             mimeMessageHelper.setFrom(from);
-            mimeMessageHelper.setTo(ticket.getTicketOwnerEmail());
-            mimeMessageHelper.setSubject("Ticket for " + ticket.getEventName());
+            mimeMessageHelper.setTo(tickets.get(0).getTicketCreatedBy());
+            mimeMessageHelper.setSubject("Ticket for " + tickets.get(0).getEventName());
+
+            Optional<UserAccount> user = userRepository.findByEmail(tickets.get(0).getTicketCreatedBy());
+
+            if (user.isEmpty()) {
+                throw new BaseException(HttpStatus.NOT_FOUND.value(), "User not found");
+            }
 
             // Set HTML content
-            String htmlContent = "<p style=\"font-size: 16px;\"><strong>Dear " + ticket.getTicketOwnerName() + ",</strong></p>"
-                    + "<p>Your ticket has been attached to this email. Please check the attached file.</p>"
+            String htmlContent = "<p style=\"font-size: 16px;\"><strong>Dear " + user.get().getFirstName() + ",</strong></p>"
+                    + "<p>Your ticket has been attached to this email. Please check the attached file(s).</p>"
                     + "<p>Regards,<br/>Relevant Bangladesh</p>";
 
             mimeMessageHelper.setText(htmlContent, true);
 
-            // Create a DataSource from PDF byte array
-            ByteArrayDataSource dataSource = new ByteArrayDataSource(pdfBytes, "application/pdf");
-
-            // Use the QR code as part of the filename, for uniqueness
-            String filename = ticket.getTicketId() + "-" + ticket.getTicketOwnerName() + ".pdf";
-            mimeMessageHelper.addAttachment(filename, dataSource);
+            for (Ticket ticket : tickets) {
+                byte[] pdf = pdfGenerator.generateTicketPdf(ticket);
+                ByteArrayDataSource dataSource = new ByteArrayDataSource(pdf, "application/pdf");
+                mimeMessageHelper.addAttachment("ticket_" + ticket.getTicketId() + ".pdf", dataSource);
+            }
 
             javaMailSender.send(mimeMessage);
 

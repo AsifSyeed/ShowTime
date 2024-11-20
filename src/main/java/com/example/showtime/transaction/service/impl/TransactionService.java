@@ -5,11 +5,12 @@ import com.example.showtime.event.model.entity.Event;
 import com.example.showtime.event.services.IEventService;
 import com.example.showtime.ticket.model.entity.Ticket;
 import com.example.showtime.ticket.service.ITicketService;
-import com.example.showtime.transaction.controller.TransactionController;
 import com.example.showtime.transaction.enums.TransactionStatusEnum;
 import com.example.showtime.transaction.model.entity.TransactionItem;
 import com.example.showtime.transaction.model.request.CheckTransactionStatusRequest;
+import com.example.showtime.refund.model.request.RefundRequest;
 import com.example.showtime.transaction.model.response.CheckTransactionStatusResponse;
+import com.example.showtime.transaction.model.response.SSLRefundResponse;
 import com.example.showtime.transaction.model.response.ValidTransactionItems;
 import com.example.showtime.transaction.repository.TransactionRepository;
 import com.example.showtime.transaction.service.ITransactionService;
@@ -66,7 +67,7 @@ public class TransactionService implements ITransactionService {
     }
 
     @Override
-    public void sslTransactionUpdate(String transactionRefNo, String validationId, String amount, String currency, String status, String error, String bank_tran_id) {
+    public void sslTransactionUpdate(String transactionRefNo, String validationId, String amount, String currency, String status, String error, String bank_tran_id, String card_type, String card_issuer, String card_brand) {
 
         if (transactionRefNo == null || transactionRefNo.isEmpty()) {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction ID is required");
@@ -94,6 +95,9 @@ public class TransactionService implements ITransactionService {
         transactionItem.setBankTranId(bank_tran_id);
         transactionItem.setErrorMessage(error);
         transactionItem.setValidationId(validationId);
+        transactionItem.setCardType(card_type);
+        transactionItem.setCardIssuer(card_issuer);
+        transactionItem.setCardBrand(card_brand);
 
         if (sslStatus == sslStatusFromRedirectUrl) {
             if (sslStatus) {
@@ -181,6 +185,30 @@ public class TransactionService implements ITransactionService {
     @Override
     public List<TransactionItem> getTransactionsByEventIdsAndTransactionStatus(List<String> eventIds, int value) {
         return transactionRepository.findByEventIdInAndTransactionStatus(eventIds, value);
+    }
+
+    @Override
+    public TransactionItem getTransactionByTransactionRefNo(String transactionRefNo) {
+        return transactionRepository.findByTransactionRefNo(transactionRefNo);
+    }
+
+    @Override
+    public void updateTransaction(TransactionItem transactionItem) {
+        transactionRepository.save(transactionItem);
+    }
+
+    private TransactionItem validateRefundRequest(RefundRequest refundRequest) {
+        TransactionItem selectedTransaction = transactionRepository.findByTransactionRefNo(refundRequest.getTransactionRefNo());
+
+        if (selectedTransaction == null) {
+            throw new BaseException(HttpStatus.NOT_FOUND.value(), "Transaction not found");
+        }
+
+        if (selectedTransaction.getTransactionStatus() != TransactionStatusEnum.SUCCESS.getValue()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Transaction is not successful");
+        }
+
+        return selectedTransaction;
     }
 
     private String getDateString(Date transactionDate) {

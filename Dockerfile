@@ -14,10 +14,10 @@ EXPOSE 8080
 CMD ["java", "-jar", "showTime.jar"]
 
 # Build Command
-# docker buildx build --platform linux/amd64 -t asifsyeed/counters_bd:202410230126 .
+# docker buildx build --platform linux/amd64 -t asifsyeed/counters_bd:202411201512 .
 
 # Push Command
-# docker push asifsyeed/counters_bd:202410230126
+# docker push asifsyeed/counters_bd:202411201512
 
 # Pull and run Command
-# sudo docker run -d -p 80:8080 asifsyeed/counters_bd:202410230126
+# sudo docker run -d -p 80:8080 asifsyeed/counters_bd:202411201512

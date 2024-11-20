@@ -44,4 +44,13 @@ public class TransactionItem {
 
     @Column(name = "ERROR_MESSAGE")
     private String errorMessage;
+
+    @Column(name = "CARD_TYPE")
+    private String cardType;
+
+    @Column(name = "CARD_ISSUER")
+    private String cardIssuer;
+
+    @Column(name = "CARD_BRAND")
+    private String cardBrand;
 }

@@ -14,7 +14,6 @@ import com.example.showtime.user.model.request.ChangePasswordRequest;
 import com.example.showtime.user.model.request.ForgetPasswordRequest;
 import com.example.showtime.user.model.request.SignUpRequest;
 import com.example.showtime.common.model.response.UserProfileResponse;
-import com.example.showtime.user.model.request.SignUpTfaVerifyRequest;
 import com.example.showtime.user.model.response.SignUpResponse;
 import com.example.showtime.user.repository.UserRepository;
 import com.example.showtime.user.service.IUserService;
@@ -81,7 +80,10 @@ public class UserService implements IUserService {
         userRepository.save(userAccount);
         sendEmail(userAccount.getEmail(), "Welcome to Counters BD", htmlContent);
 
-        return authService.login(AuthRequest.builder().email(signUpRequest.getEmail()).password(signUpRequest.getPassword()).userRole(signUpRequest.getUserRole()).build());
+        return authService.login(AuthRequest.builder()
+                .email(signUpRequest.getEmail())
+                .password(signUpRequest.getPassword())
+                .userRole(signUpRequest.getUserRole()).build());
     }
 
     private String getTfaSessionId(String userName, String email, int featureCode) {
@@ -220,6 +222,23 @@ public class UserService implements IUserService {
                 !isValidUserRole(signUpRequest.getUserRole())) {
 
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Request body is not valid");
+        }
+
+        // check regex for email
+        checkValidEmail(signUpRequest.getEmail());
+        checkValidPassword(signUpRequest.getPassword());
+    }
+
+    private void checkValidPassword(String password) {
+        // password must contain at least 8 characters
+        if (password.length() < 8) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Password must contain at least 8 characters");
+        }
+    }
+
+    private void checkValidEmail(String email) {
+        if (!email.matches("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$")) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Invalid email");
         }
     }
 

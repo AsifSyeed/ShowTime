@@ -69,4 +69,7 @@ public class Ticket {
 
     @Column(name = "TICKET_TYPE")
     private int ticketType;
+
+    @Column(name ="VERIFIER_ID")
+    private String verifierId;
  }

@@ -1,5 +1,6 @@
 package com.example.showtime.event.model.response;
 
+import com.example.showtime.referral.model.response.GetReferralResponse;
 import com.example.showtime.ticket.model.response.EventCategoryResponse;
 import lombok.*;
 
@@ -25,4 +26,5 @@ public class AdminEventResponse {
     private String eventDescription;
     private String eventLocation;
     private List<EventCategoryResponse> categoryList;
+    private List<GetReferralResponse> referralList;
 }

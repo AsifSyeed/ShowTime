@@ -45,6 +45,12 @@ public class ReferralService implements IReferralService {
                 throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event id is required");
             }
 
+            Event selectedEvent = eventRepository.findByEventId(eventId);
+
+            if (selectedEvent == null) {
+                throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event not found");
+            }
+
             return referralRepository.findByEventId(eventId).stream()
                     .filter(Referral::getIsActive) // Only include active referrals
                     .map(referral -> GetReferralResponse.builder()
@@ -113,8 +119,12 @@ public class ReferralService implements IReferralService {
                 .findFirst()
                 .orElse(null);
 
-        if (userRole == null || Integer.parseInt(userRole) != UserRole.ADMIN.getValue() || Integer.parseInt(userRole) != UserRole.SUPER_ADMIN.getValue()) {
+        if (userRole == null)  {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "You are not authorized to create a referral");
+        }
+
+        if (Integer.parseInt(userRole) != UserRole.ADMIN.getValue() && Integer.parseInt(userRole) != UserRole.SUPER_ADMIN.getValue()) {
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "You are not authorized to create a referral");
         }
 
         if (Objects.isNull(referral) ||
@@ -134,15 +144,28 @@ public class ReferralService implements IReferralService {
             throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Referral not found");
         }
 
+        String userEmail = authentication.getName();
+
+        if (Integer.parseInt(userRole) != UserRole.SUPER_ADMIN.getValue()) {
+            Event event = eventRepository.findByEventId(referral.getEventId());
+
+            if (!event.getCreatedBy().equals(userEmail)) {
+                throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "You are not authorized to update this referral");
+            }
+        }
+
         existingReferral.setReferralDiscount(referral.getReferralDiscount());
         existingReferral.setReferralType(referral.getReferralType());
         existingReferral.setIsActive(referral.getIsActive());
 
         if (existingReferral.getReferralType() == ReferralTypeEnum.DEFAULT.getValue()) {
             // set all other default referrals to custom
-            Referral defaultReferrals = referralRepository.findByEventIdAndReferralType(existingReferral.getEventId(), ReferralTypeEnum.DEFAULT.getValue());
-            defaultReferrals.setReferralType(ReferralTypeEnum.CUSTOM.getValue());
-            referralRepository.save(defaultReferrals);
+            Referral defaultReferral = referralRepository.findByEventIdAndReferralType(existingReferral.getEventId(), ReferralTypeEnum.DEFAULT.getValue());
+
+            if (defaultReferral != null) {
+                defaultReferral.setReferralType(ReferralTypeEnum.CUSTOM.getValue());
+                referralRepository.save(defaultReferral);
+            }
         }
 
         referralRepository.save(existingReferral);

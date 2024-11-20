@@ -1,5 +1,6 @@
 package com.example.showtime.ticket.service.impl;
 
+import com.example.showtime.admin.model.entity.Admin;
 import com.example.showtime.admin.repository.AdminRepository;
 import com.example.showtime.common.exception.BaseException;
 import com.example.showtime.common.pdf.PdfGenerator;
@@ -35,10 +36,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.validation.Valid;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -81,6 +82,87 @@ public class TicketService implements ITicketService {
         } catch (AccessDeniedException e) {
             throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized Access");
         }
+    }
+
+    @Override
+    public void adminCreateTicket(BuyTicketRequest buyTicketRequest) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .orElse(null);
+
+        if (userRole == null) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "User Role not found");
+        }
+
+        if (Integer.parseInt(userRole) != UserRole.SUPER_ADMIN.getValue() && Integer.parseInt(userRole) != UserRole.ADMIN.getValue()) {
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "You are not authorized");
+        }
+
+        Event selectedEvent = eventService.getEventById(buyTicketRequest.getEventId());
+
+        if (selectedEvent == null) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event not found");
+        }
+
+        if (!selectedEvent.getIsActive()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event is not active");
+        }
+
+        Optional<Admin> createdBy = adminRepository.findByEmail(authentication.getName());
+
+        if (createdBy.isEmpty()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Admin not found");
+        }
+
+        prepareAdminTicketModel(buyTicketRequest, createdBy);
+    }
+
+    private void prepareAdminTicketModel(BuyTicketRequest buyTicketRequest, Optional<Admin> createdBy) {
+        List<Ticket> adminTickets;
+
+        Event selectedEvent = eventService.getEventById(buyTicketRequest.getEventId());
+        List<TicketOwnerInformationRequest> ticketOwnerInformation = buyTicketRequest.getTicketOwnerInformation();
+
+        String refId = uniqueIdGenerator.generateUniqueUUID(selectedEvent.getEventId().substring(0, 2));
+
+        adminTickets = IntStream.range(0, Math.toIntExact(ticketOwnerInformation.size()))
+                .parallel()
+                .mapToObj(i -> {
+                    Ticket ticket = new Ticket();
+
+                    if (buyTicketRequest.getCouponCode().isEmpty()) {
+                        ticket.setTicketId(uniqueIdGenerator.generateUniqueId(selectedEvent.getEventId()));
+                    } else {
+                        ticket.setTicketId(uniqueIdGenerator.generateUniqueId(buyTicketRequest.getCouponCode()));
+                    }
+
+                    ticket.setEventName(selectedEvent.getEventName());
+                    ticket.setTicketTransactionStatus(TransactionStatusEnum.SUCCESS.getValue());
+                    ticket.setUsed(false);
+                    ticket.setActive(true);
+                    ticket.setTicketTransactionId(refId);
+                    ticket.setTicketCreatedDate(Calendar.getInstance().getTime());
+                    ticket.setEventId(selectedEvent.getEventId());
+                    ticket.setEventImageUrl(selectedEvent.getEventThumbnailUrl());
+                    ticket.setValidityDate(selectedEvent.getEventEndDate());
+                    ticket.setTicketCategory(buyTicketRequest.getTicketCategory());
+                    ticket.setTicketOwnerName(ticketOwnerInformation.get(i).getTicketOwnerName());
+                    ticket.setTicketOwnerEmail(ticketOwnerInformation.get(i).getTicketOwnerEmail());
+                    ticket.setTicketOwnerNumber(ticketOwnerInformation.get(i).getTicketOwnerNumber());
+                    ticket.setTicketCreatedBy(createdBy.get().getAdminName());
+                    ticket.setTicketPrice(categoryService.getTicketPrice(buyTicketRequest.getTicketCategory(), selectedEvent.getEventId()));
+                    ticket.setAppliedCoupon(buyTicketRequest.getCouponCode());
+                    ticket.setTicketType(TicketTypeEnum.ONLINE.getValue());
+
+                    return ticket;
+                })
+                .collect(Collectors.toList());
+
+        eventService.updateAvailableTickets(selectedEvent.getEventId(), buyTicketRequest.getTicketCategory(), adminTickets.size());
+
+        ticketRepository.saveAll(adminTickets);
     }
 
     private Pair<String, Double> prepareTicketModel(BuyTicketRequest buyTicketRequest, UserAccount createdBy) {
@@ -147,6 +229,10 @@ public class TicketService implements ITicketService {
 
         if (!isTicketInStock(buyTicketRequest.getTicketCategory(), buyTicketRequest.getEventId(), (long) buyTicketRequest.getTicketOwnerInformation().size())) {
             throw new BaseException(HttpStatus.NOT_FOUND.value(), "Ticket is not in stock");
+        }
+
+        if (!selectedEvent.getIsActive()) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "Event is not active");
         }
     }
 
@@ -315,8 +401,12 @@ public class TicketService implements ITicketService {
                 .findFirst()
                 .orElse(null);
 
-        if (userRole == null || Integer.parseInt(userRole) != UserRole.ADMIN.getValue() || Integer.parseInt(userRole) != UserRole.SUPER_ADMIN.getValue()) {
-            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "You are not authorized to create physical ticket");
+        if (userRole == null) {
+            throw new BaseException(HttpStatus.BAD_REQUEST.value(), "User Role not found");
+        }
+
+        if (Integer.parseInt(userRole) != UserRole.SUPER_ADMIN.getValue() && Integer.parseInt(userRole) != UserRole.ADMIN.getValue()) {
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "You are not authorized");
         }
 
         if (Objects.isNull(physicalTicketRequest) ||
@@ -447,6 +537,16 @@ public class TicketService implements ITicketService {
         } catch (Exception e) {
             throw new BaseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error generating PDF");
         }
+    }
+
+    @Override
+    public void updateTicket(Ticket ticket) {
+        ticketRepository.save(ticket);
+    }
+
+    @Override
+    public List<Ticket> getTicketsByCreatedBy(String email) {
+        return ticketRepository.findByTicketCreatedBy(email);
     }
 
     private Ticket getTicketByUserAndTicketId(UserAccount createdBy, String ticketId) {

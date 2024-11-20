@@ -51,6 +51,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             "/api/v1/ticket/verify",
             "/api/v1/event/verify-for-scanner",
             "/api/v1/ticket/send-email-to-failed-transaction",
+            "/api/v1/ticket-verify/validate-verifier",
+            "/api/v1/ticket-verify/verify-ticket",
             "/v3/api-docs",
             "/v2/api-docs",
             "/swagger-resources/**",
